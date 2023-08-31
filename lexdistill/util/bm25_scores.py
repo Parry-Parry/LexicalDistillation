@@ -32,7 +32,7 @@ def main(triples_path : str,
         x['query'] = x['qid'].apply(lambda qid : clean(queries[qid]))
         return x
 
-    index = PisaIndex.from_dataset("msmarco_passage", num_threads=num_threads)
+    index = PisaIndex.from_dataset("msmarco_passage", threads=num_threads)
     bm25 = pt.apply.generic(lambda x : get_query_text(x)) >> index.bm25(num_results=budget)
 
     def pivot_batch(batch):

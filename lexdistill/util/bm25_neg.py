@@ -19,7 +19,7 @@ def convert_to_dict(result):
 clean = lambda x : re.sub(r"[^a-zA-Z0-9¿]+", " ", x)
 
 def main(out_dir : str, subset : int = 100000, budget : int = 1000, batch_size : int = 1000, num_threads : int = 8):
-    index = PisaIndex.from_dataset("msmarco_passage", num_threads=num_threads)
+    index = PisaIndex.from_dataset("msmarco_passage", threads=num_threads)
     
     dataset = irds.load("msmarco-passage/train/triples-small")
     queries = pd.DataFrame(dataset.queries_iter()).set_index('query_id')['text'].to_dict()
