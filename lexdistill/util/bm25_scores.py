@@ -63,7 +63,7 @@ def main(triples_path : str,
         new['query'] = new['qid'].apply(lambda qid : clean(queries[str(qid)]))
         new['text'] = new['docno'].apply(lambda qid : clean(docs[str(qid)]))
 
-        rez = rez.append(bm25_scorer.score(new)).drop_duplicates(['qid', 'docno'])
+        rez = rez.append(bm25_scorer.transform(new)).drop_duplicates(['qid', 'docno'])
 
         print(rez.head())
 
