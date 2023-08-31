@@ -38,12 +38,12 @@ def main(triples_path : str,
         records = []
         for row in batch.itertuples():
             records.extend([{
-                'qid': row.qid,
-                'docno': row.doc_id_a,
+                'qid': str(row.qid),
+                'docno': str(row.doc_id_a),
                 },
                 {
-                'qid': row.qid,
-                'docno': row.doc_id_b,
+                'qid': str(row.qid),
+                'docno': str(row.doc_id_b),
                 }
                 ])
         return pd.DataFrame.from_records(records)
