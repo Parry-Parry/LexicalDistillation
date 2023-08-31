@@ -65,6 +65,7 @@ def main(triples_path : str,
 
     for subset in tqdm(split_df(triples, ceil(len(triples) / batch_size)), desc="Total Batched Iter"):
         new = pivot_batch(subset.copy())
+        print(new.head())
         topics = subset['qid'].drop_duplicates()
         res = score(topics, bm25, norm=True)
         # create default dict of results with key qid, docno
