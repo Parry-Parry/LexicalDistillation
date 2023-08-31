@@ -35,7 +35,7 @@ def main(out_dir : str, subset : int = 100000, budget : int = 1000, batch_size :
 
     for subset in tqdm(split_df(train, batch_size), desc="Total Batched Iter"):
         new = subset.copy()
-        topics = subset[['qid', 'query']].drop_duplicates()
+        topics = subset[['qid']].drop_duplicates()
         res = bm25.transform(topics).drop(['score', 'rank'], axis=1)
 
         def get_sample(qid):

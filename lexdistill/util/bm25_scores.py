@@ -65,7 +65,7 @@ def main(triples_path : str,
     main_lookup = {}
 
     for subset in tqdm(split_df(triples, ceil(len(triples) / batch_size)), desc="Total Batched Iter"):
-        topics = subset[['qid', 'query']].drop_duplicates()
+        topics = subset[['qid']].drop_duplicates()
         
         new = pivot_batch(subset.copy())
         res = score(topics, bm25, norm=True)
