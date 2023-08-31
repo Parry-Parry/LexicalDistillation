@@ -32,7 +32,7 @@ def main(triples_path : str,
     pt_index = pt.IndexFactory.of(pt_index, memory=True)
     bm25_scorer = pt.text.scorer(body_attr="text", wmodel="BM25", background_index=pt_index)
     index = PisaIndex.from_dataset("msmarco_passage", threads=8)
-    bm25 = pt.apply.generic(lambda x : get_query_text(x)) >> index.bm25(num_results=5000)
+    bm25 = pt.apply.generic(lambda x : get_query_text(x)) >> index.bm25(num_results=1000) >> pt.text.get_text(dataset, 'text')
 
     def pivot_batch(batch):
         records = []
@@ -56,17 +56,14 @@ def main(triples_path : str,
     
     def score(batch, norm=False):
         new = pivot_batch(batch.copy())
-        topics = subset['qid'].drop_duplicates()
         
         # score with bm25 over all topics and if any (qid docno) pair from new is missing, recore missing records with bm25 scorer 
         rez = bm25.transform(topics)
 
-        to_score = new[~new[['qid', 'docno']].apply(tuple, axis=1).isin(rez[['qid', 'docno']].apply(tuple, axis=1))] 
-        if len(to_score) > 0:
-            to_score['text'] = to_score['docno'].apply(lambda x : clean(docs[str(x)]))
-            to_score['query'] = to_score['qid'].apply(lambda x : clean(queries[str(x)]))
-            scored = bm25_scorer.transform(to_score)
-            rez = pd.concat([rez, scored])
+        new['query'] = new['qid'].apply(lambda qid : clean(queries[str(qid)]))
+        new['text'] = new['docno'].apply(lambda qid : clean(docs[str(qid)]))
+
+        rez = rez.append(bm25_scorer.score(new)).drop_duplicates(['qid', 'docno'])
 
         if norm:
             # minmax norm over each query score set 
