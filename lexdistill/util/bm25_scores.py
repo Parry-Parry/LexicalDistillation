@@ -10,7 +10,6 @@ import logging
 import json
 import re
 from math import ceil
-from pyterrier_pisa import PisaIndex
 import ir_datasets as irds
 
 def convert_to_dict(result):
@@ -21,9 +20,7 @@ clean = lambda x : re.sub(r"[^a-zA-Z0-9¿]+", " ", x)
 
 def main(triples_path : str,
          out_path : str,
-         batch_size : int = 1000,
-         num_threads=8,
-         budget=1000) -> str:
+         batch_size : int = 1000) -> str:
     
     triples = pd.read_csv(triples_path, sep="\t", dtype={"qid":str, "doc_id_a":str, "doc_id_b":str}, index_col=False)
     queries = pd.DataFrame(irds.load("msmarco-passage/train/triples-small").queries_iter()).set_index('query_id')['text'].to_dict()
@@ -32,8 +29,9 @@ def main(triples_path : str,
         x['query'] = x['qid'].apply(lambda qid : clean(queries[qid]))
         return x
 
-    index = PisaIndex.from_dataset("msmarco_passage", threads=num_threads)
-    bm25 = pt.apply.generic(lambda x : get_query_text(x)) >> index.bm25(num_results=budget)
+    index = pt.get_dataset("msmarco_passage").get_index("terrier_stemmed")
+    index = pt.IndexFactory.of(index, memory=True)
+    bm25 = pt.apply.generic(lambda x : get_query_text(x)) >> pt.text.get_text(pt.get_dataset("irds:msmarco-passage/train/triples-small"), 'text') >> pt.text.scorer(body_attr="text", wmodel="BM25", background_index=index),
 
     def pivot_batch(batch):
         records = []
@@ -65,10 +63,8 @@ def main(triples_path : str,
     main_lookup = {}
 
     for subset in tqdm(split_df(triples, ceil(len(triples) / batch_size)), desc="Total Batched Iter"):
-        topics = subset[['qid']].drop_duplicates()
-        
         new = pivot_batch(subset.copy())
-        res = score(topics, bm25, norm=True)
+        res = score(new, bm25, norm=True)
         # create default dict of results with key qid, docno
         results_lookup = convert_to_dict(res)
         new['score'] = new.apply(lambda x : results_lookup[x.qid][x.docno], axis=1)
