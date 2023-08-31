@@ -27,7 +27,7 @@ def main(out_dir : str, subset : int = 100000, budget : int = 1000, batch_size :
     train = train.sample(n=subset) 
 
     def get_query_text(x):
-        x['query'] = x['qid'].apply(lambda qid : clean(queries[qid]))
+        x['query'] = x['qid'].apply(lambda qid : clean(queries[str(qid)]))
         return x
     bm25 = pt.apply.generic(lambda x : get_query_text(x)) >> index.bm25(num_results=budget)
 
