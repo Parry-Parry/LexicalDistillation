@@ -32,7 +32,7 @@ def main(triples_path : str,
     pt_index = pt.IndexFactory.of(pt_index, memory=True)
     bm25_scorer = pt.text.scorer(body_attr="text", wmodel="BM25", background_index=pt_index)
     index = PisaIndex.from_dataset("msmarco_passage", threads=8)
-    bm25 = pt.apply.generic(lambda x : get_query_text(x)) >> index.bm25(num_results=1000) >> pt.text.get_text(dataset, 'text')
+    bm25 = pt.apply.generic(lambda x : get_query_text(x)) >> index.bm25(num_results=1000) >> pt.text.get_text(pt.get_dataset('irds:msmarco-passage/train/triples-small'), 'text')
 
     def pivot_batch(batch):
         records = []
