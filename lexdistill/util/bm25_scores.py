@@ -62,8 +62,11 @@ def main(triples_path : str,
 
         new['query'] = new['qid'].apply(lambda qid : clean(queries[str(qid)]))
         new['text'] = new['docno'].apply(lambda qid : clean(docs[str(qid)]))
-
-        rez = rez.append(bm25_scorer.transform(new)).drop_duplicates(['qid', 'docno']).reset_index(drop=True)
+        
+        batch_score = bm25_scorer.transform(new)
+        print(len(rez))
+        print(batch_score.head())
+        rez = rez.append(new).drop_duplicates(['qid', 'docno']).reset_index(drop=True)
 
         if norm:
             # minmax norm over each query score set 
@@ -76,7 +79,6 @@ def main(triples_path : str,
         new = pivot_batch(subset.copy())
         topics = subset['qid'].drop_duplicates()
         res = score(subset, norm=True)
-        print(len(res) - len(topics)*5000)
         # create default dict of results with key qid, docno
         results_lookup = convert_to_dict(res)
         new['score'] = new.apply(lambda x : results_lookup[str(x.qid)][str(x.docno)], axis=1)
