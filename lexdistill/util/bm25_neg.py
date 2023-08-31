@@ -41,7 +41,7 @@ def main(out_dir : str, subset : int = 100000, budget : int = 1000, batch_size :
         def get_sample(qid):
             return res[res.qid==qid].iloc[:1000].sample(n=1)['docno'].iloc[0]
 
-        new['doc_id_b'] = new.apply(lambda x : get_sample(x['qid']), axis=1)
+        new['doc_id_b'] = new.apply(lambda x : get_sample(), axis=1)
         new_set.append(new)
 
     new_set = pd.concat(new_set)
