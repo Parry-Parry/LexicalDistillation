@@ -64,9 +64,7 @@ def main(triples_path : str,
         new['text'] = new['docno'].apply(lambda qid : clean(docs[str(qid)]))
         
         batch_score = bm25_scorer.transform(new)
-        print(len(rez))
-        print(batch_score.head())
-        rez = rez.append(new).drop_duplicates(['qid', 'docno']).reset_index(drop=True)
+        rez = rez.append(batch_score).drop_duplicates(['qid', 'docno']).reset_index(drop=True)
 
         if norm:
             # minmax norm over each query score set 
