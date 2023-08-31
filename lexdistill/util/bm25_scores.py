@@ -65,6 +65,8 @@ def main(triples_path : str,
 
         rez = rez.append(bm25_scorer.score(new)).drop_duplicates(['qid', 'docno'])
 
+        print(rez.head())
+
         if norm:
             # minmax norm over each query score set 
             rez['score'] = rez.groupby('qid', group_keys=False)['score'].apply(lambda x: (x - x.min()) / (x.max() - x.min()))
