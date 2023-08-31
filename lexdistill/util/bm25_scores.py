@@ -31,7 +31,7 @@ def main(triples_path : str,
 
     index = pt.get_dataset("msmarco_passage").get_index("terrier_stemmed")
     index = pt.IndexFactory.of(index, memory=True)
-    bm25 = pt.apply.generic(lambda x : get_query_text(x)) >> pt.text.get_text(pt.get_dataset("irds:msmarco-passage/train/triples-small"), 'text') >> pt.text.scorer(body_attr="text", wmodel="BM25", background_index=index),
+    bm25 = pt.apply.generic(lambda x : get_query_text(x)) >> pt.text.get_text(pt.get_dataset("irds:msmarco-passage/train/triples-small"), 'text') >> pt.text.scorer(body_attr="text", wmodel="BM25", background_index=index)
 
     def pivot_batch(batch):
         records = []
