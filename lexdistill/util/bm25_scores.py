@@ -72,23 +72,17 @@ def main(triples_path : str,
             # minmax norm over each query score set 
             rez['score'] = rez.groupby('qid', group_keys=False)['score'].apply(lambda x: (x - x.min()) / (x.max() - x.min()))
         return rez
-    
-    def apply_scores(row, results):
-        if str(row.qid) in results and str(row.docno) in results[str(row.qid)]:
-            return results[str(row.qid)][str(row.docno)]
-        else:
-            return bm25_scorer.transform(pd.DataFrame({'qid' : [row.qid], 'query' : queries[str(row.qid)], 'docno' : row.docno, 'text' : docs[str[row.docno]]})).iloc[0]['score']
    
     main_lookup = {}
 
     for subset in tqdm(split_df(triples, ceil(len(triples) / batch_size)), desc="Total Batched Iter"):
         new = pivot_batch(subset.copy())
         topics = subset['qid'].drop_duplicates()
-        res = score(subset, bm25, norm=True)
+        res = score(subset, norm=True)
         print(len(res) - len(topics)*5000)
         # create default dict of results with key qid, docno
         results_lookup = convert_to_dict(res)
-        new['score'] = new.apply(lambda x : apply_scores(x, results_lookup), axis=1)
+        new['score'] = new.apply(lambda x : results_lookup[str(x.qid)][str(x.docno)], axis=1)
         main_lookup.update(convert_to_dict(new))
 
     with open(out_path, 'w') as f:
