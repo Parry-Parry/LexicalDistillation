@@ -54,8 +54,20 @@ def main(triples_path : str,
             lookup[str(row.qid)][str(row.docno)] = float(row.score)
         return lookup
     
-    def score(batch, model, norm=False):
-        rez = model.transform(batch)
+    def score(batch, norm=False):
+        new = pivot_batch(batch.copy())
+        topics = subset['qid'].drop_duplicates()
+        
+        # score with bm25 over all topics and if any (qid docno) pair from new is missing, recore missing records with bm25 scorer 
+        rez = bm25.transform(topics)
+
+        to_score = new[~new[['qid', 'docno']].apply(tuple, axis=1).isin(rez[['qid', 'docno']].apply(tuple, axis=1))] 
+        if len(to_score) > 0:
+            to_score['text'] = to_score['docno'].apply(lambda x : docs[str(x)])
+            to_score['query'] = to_score['qid'].apply(lambda x : queries[str(x)])
+            scored = bm25_scorer.transform(to_score)
+            rez = pd.concat([rez, scored])
+
         if norm:
             # minmax norm over each query score set 
             rez['score'] = rez.groupby('qid', group_keys=False)['score'].apply(lambda x: (x - x.min()) / (x.max() - x.min()))
@@ -72,7 +84,7 @@ def main(triples_path : str,
     for subset in tqdm(split_df(triples, ceil(len(triples) / batch_size)), desc="Total Batched Iter"):
         new = pivot_batch(subset.copy())
         topics = subset['qid'].drop_duplicates()
-        res = score(topics, bm25, norm=True)
+        res = score(subset, bm25, norm=True)
         print(len(res) - len(topics)*5000)
         # create default dict of results with key qid, docno
         results_lookup = convert_to_dict(res)
