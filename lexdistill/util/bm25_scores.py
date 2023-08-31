@@ -11,6 +11,7 @@ import json
 import re
 from math import ceil
 import ir_datasets as irds
+from pyterrier_pisa import PisaIndex
 
 def convert_to_dict(result):
     result = result.groupby('qid').apply(lambda x: dict(zip(x['docno'], zip(x['score'], x['rank'])))).to_dict()
@@ -29,9 +30,8 @@ def main(triples_path : str,
         x['query'] = x['qid'].apply(lambda qid : clean(queries[qid]))
         return x
 
-    index = pt.get_dataset("msmarco_passage").get_index("terrier_stemmed")
-    index = pt.IndexFactory.of(index, memory=True)
-    bm25 = pt.apply.generic(lambda x : get_query_text(x)) >> pt.text.get_text(pt.get_dataset("irds:msmarco-passage/train/triples-small"), 'text') >> pt.text.scorer(body_attr="text", wmodel="BM25", background_index=index)
+    index = PisaIndex.from_dataset("msmarco_passage", threads=8)
+    bm25 = pt.apply.generic(lambda x : get_query_text(x)) >> pt.text.get_text(pt.get_dataset("irds:msmarco-passage/train/triples-small"), 'text') >> index.bm25(num_results=5000)
 
     def pivot_batch(batch):
         records = []
@@ -64,7 +64,8 @@ def main(triples_path : str,
 
     for subset in tqdm(split_df(triples, ceil(len(triples) / batch_size)), desc="Total Batched Iter"):
         new = pivot_batch(subset.copy())
-        res = score(new, bm25, norm=True)
+        topics = subset['qid'].drop_duplicates()
+        res = score(topics, bm25, norm=True)
         # create default dict of results with key qid, docno
         results_lookup = convert_to_dict(res)
         new['score'] = new.apply(lambda x : results_lookup[x.qid][x.docno], axis=1)
