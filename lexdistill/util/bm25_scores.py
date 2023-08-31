@@ -24,10 +24,10 @@ def main(triples_path : str,
          batch_size : int = 1000) -> str:
     
     triples = pd.read_csv(triples_path, sep="\t", index_col=False).rename(columns={'query_id': 'qid'})
-    print(triples.head())
     queries = pd.DataFrame(irds.load("msmarco-passage/train/triples-small").queries_iter()).set_index('query_id')['text'].to_dict()
 
     def get_query_text(x):
+        print(x.head())
         x['query'] = x['qid'].apply(lambda qid : clean(queries[qid]))
         return x
 
@@ -65,7 +65,6 @@ def main(triples_path : str,
 
     for subset in tqdm(split_df(triples, ceil(len(triples) / batch_size)), desc="Total Batched Iter"):
         new = pivot_batch(subset.copy())
-        print(new.head())
         topics = subset['qid'].drop_duplicates()
         res = score(topics, bm25, norm=True)
         # create default dict of results with key qid, docno
