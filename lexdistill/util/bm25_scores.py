@@ -27,9 +27,8 @@ def main(triples_path : str,
     queries = pd.DataFrame(irds.load("msmarco-passage/train/triples-small").queries_iter()).set_index('query_id')['text'].to_dict()
 
     def get_query_text(x):
-        df = pd.DataFrame({'qid' : x.values})
-        df['query'] = df['qid'].apply(lambda qid : clean(queries[str(qid)]))
-        return x
+        df = pd.DataFrame({'qid' : x.values, 'query' : x.apply(lambda qid : clean(queries[str(qid)]))})
+        return df
 
     index = PisaIndex.from_dataset("msmarco_passage", threads=8)
     bm25 = pt.apply.generic(lambda x : get_query_text(x)) >> index.bm25(num_results=5000)
