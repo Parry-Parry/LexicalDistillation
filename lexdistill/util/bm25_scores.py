@@ -24,6 +24,7 @@ def main(triples_path : str,
          batch_size : int = 1000) -> str:
     
     triples = pd.read_csv(triples_path, sep="\t", index_col=False).rename(columns={'query_id': 'qid'})
+    print(triples.head())
     queries = pd.DataFrame(irds.load("msmarco-passage/train/triples-small").queries_iter()).set_index('query_id')['text'].to_dict()
 
     def get_query_text(x):
