@@ -56,7 +56,7 @@ def main(triples_path : str,
     
     def score(batch, norm=False):
         new = pivot_batch(batch.copy())
-        
+        topics = new['qid'].drop_duplicates()
         # score with bm25 over all topics and if any (qid docno) pair from new is missing, recore missing records with bm25 scorer 
         rez = bm25.transform(topics)
 
@@ -74,8 +74,7 @@ def main(triples_path : str,
     main_lookup = {}
 
     for subset in tqdm(split_df(triples, ceil(len(triples) / batch_size)), desc="Total Batched Iter"):
-        new = pivot_batch(subset.copy())
-        topics = subset['qid'].drop_duplicates()
+        new = subset.copy()
         res = score(subset, norm=True)
         # create default dict of results with key qid, docno
         results_lookup = convert_to_dict(res)
