@@ -63,8 +63,8 @@ def main(triples_path : str,
 
         to_score = new[~new[['qid', 'docno']].apply(tuple, axis=1).isin(rez[['qid', 'docno']].apply(tuple, axis=1))] 
         if len(to_score) > 0:
-            to_score['text'] = to_score['docno'].apply(lambda x : docs[str(x)])
-            to_score['query'] = to_score['qid'].apply(lambda x : queries[str(x)])
+            to_score['text'] = to_score['docno'].apply(lambda x : clean(docs[str(x)]))
+            to_score['query'] = to_score['qid'].apply(lambda x : clean(queries[str(x)]))
             scored = bm25_scorer.transform(to_score)
             rez = pd.concat([rez, scored])
 
