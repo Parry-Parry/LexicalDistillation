@@ -13,10 +13,6 @@ from math import ceil
 import ir_datasets as irds
 from pyterrier_pisa import PisaIndex
 
-def convert_to_dict(result):
-    result = result.groupby('qid').apply(lambda x: dict(zip(x['docno'], zip(x['score'], x['rank'])))).to_dict()
-    return result
-
 clean = lambda x : re.sub(r"[^a-zA-Z0-9¿]+", " ", x)
 
 def main(triples_path : str,
@@ -24,12 +20,17 @@ def main(triples_path : str,
          batch_size : int = 1000) -> str:
     
     triples = pd.read_csv(triples_path, sep="\t", index_col=False).rename(columns={'query_id': 'qid'})
-    queries = pd.DataFrame(irds.load("msmarco-passage/train/triples-small").queries_iter()).set_index('query_id')['text'].to_dict()
+    dataset = irds.load("msmarco-passage/train/triples-small")
+    queries = pd.DataFrame(dataset.queries_iter()).set_index('query_id')['text'].to_dict()
+    docs = pd.DataFrame(dataset.docs_iter()).set_index('doc_id')['text'].to_dict()
 
     def get_query_text(x):
         df = pd.DataFrame({'qid' : x.values, 'query' : x.apply(lambda qid : clean(queries[str(qid)]))})
         return df
 
+    pt_index = pt.get_dataset("msmarco_passage").get_index("terrier_stemmed")
+    pt_index = pt.IndexFactory.of(pt_index, memory=True)
+    bm25_scorer = pt.text.scorer(body_attr="text", wmodel="BM25", background_index=pt_index),
     index = PisaIndex.from_dataset("msmarco_passage", threads=8)
     bm25 = pt.apply.generic(lambda x : get_query_text(x)) >> index.bm25(num_results=5000)
 
@@ -48,9 +49,9 @@ def main(triples_path : str,
         return pd.DataFrame.from_records(records)
 
     def convert_to_dict(result):
-        lookup = defaultdict(lambda : defaultdict(lambda : 0))
+        lookup = defaultdict(lambda : defaultdict(lambda : 0.))
         for row in result.itertuples():
-            lookup[row.qid][row.docno] = row.score
+            lookup[str(row.qid)][str(row.docno)] = float(row.score)
         return lookup
     
     def score(batch, model, norm=False):
@@ -59,6 +60,12 @@ def main(triples_path : str,
             # minmax norm over each query score set 
             rez['score'] = rez.groupby('qid', group_keys=False)['score'].apply(lambda x: (x - x.min()) / (x.max() - x.min()))
         return rez
+    
+    def apply_scores(row, results):
+        if str(row.qid) in results and str(row.docno) in results[str(row.qid)]:
+            return results[str(row.qid)][str(row.docno)]
+        else:
+            return bm25_scorer.transform(pd.DataFrame({'qid' : [row.qid], 'query' : queries[str(row.qid)], 'docno' : row.docno, 'text' : docs[str[row.docno]]})).iloc[0]['score']
    
     main_lookup = {}
 
@@ -66,9 +73,10 @@ def main(triples_path : str,
         new = pivot_batch(subset.copy())
         topics = subset['qid'].drop_duplicates()
         res = score(topics, bm25, norm=True)
+        print(len(res) - len(topics)*5000)
         # create default dict of results with key qid, docno
         results_lookup = convert_to_dict(res)
-        new['score'] = new.apply(lambda x : results_lookup[x.qid][x.docno], axis=1)
+        new['score'] = new.apply(lambda x : apply_scores(x, results_lookup), axis=1)
         main_lookup.update(convert_to_dict(new))
 
     with open(out_path, 'w') as f:
