@@ -75,6 +75,7 @@ def main(triples_path : str,
 
     for subset in tqdm(split_df(triples, ceil(len(triples) / batch_size)), desc="Total Batched Iter"):
         new = subset.copy()
+        new = pivot_batch(new)
         res = score(subset, norm=True)
         # create default dict of results with key qid, docno
         results_lookup = convert_to_dict(res)
