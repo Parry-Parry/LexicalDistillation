@@ -32,6 +32,7 @@ def main(eval :str, run_dir : str, out_dir : str):
             per_query = pd.DataFrame.from_records(per_query)
             # pivot metric per query_id 
             per_query = per_query.pivot(index='query_id', columns='measure', values='value')
+            print(per_query.head())
             per_query.to_csv(join(out_dir, f"{name}_per_query.tsv", index=False, sep='\t'))
     
     df = pd.DataFrame.from_records(df)
