@@ -21,13 +21,13 @@ def main(eval :str, run_dir : str, out_dir : str):
             res = evaluate.calc_aggregate(run)
             res = {str(k) : v for k, v in res.items()}
             res['name'] = name 
-            print(res)
             df.append(res)
             
             per_query = []
             for q_res in evaluate.iter_calc(run):
                 q_res = {str(k) : v for k, v in q_res._asdict().items()}
                 q_res['name'] = name
+                print(q_res)
                 per_query.append(q_res)
             
             per_query = pd.DataFrame.from_records(per_query)
