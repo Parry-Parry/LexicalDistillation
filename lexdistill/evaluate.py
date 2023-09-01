@@ -13,30 +13,23 @@ def main(model_dir : str, out : str, eval_name : str, baseline : str, model : st
     eval = pt.get_dataset(eval_name)
     baseline = bm25 >> pt.text.get_text(dataset, "text") >> MonoT5ReRanker(model=join(baseline, 'model'))
     os.makedirs(out, exist_ok=True)
+    if not os.path.exists(join(out, "baseline_results.csv")):
+        res = baseline.transform(eval.get_topics())
+        res.to_csv(join(out, "baseline_run.tsv"), sep="\t", index=False)
     if not model:
         dirs = [f for f in os.listdir(model_dir) if os.path.isdir(join(model_dir, f)) and 'baseline' not in f]
-        tmp_res = []
         for _, store in enumerate(dirs):
             if os.path.exists(join(out, f"{store}_results.csv")):
                 continue
             _model = bm25 >> pt.text.get_text(dataset, "text") >> MonoT5ReRanker(model=join(model_dir, store, 'model'))
-            models = {'baseline' : baseline, store : _model}
-            try:
-                res = pt.Experiment(list(models.values()), eval.get_topics(), eval.get_qrels(), eval_metrics=["map", "ndcg_cut_10", "recip_rank"], names = list(models.keys()), baseline = 0)
-            except:
-                print(f"Error in {store}")
-                continue
-            tmp_res.append(res)
-            res.to_csv(join(out, f"{store}_results.csv"))
+            res = _model.transform(eval.get_topics())
+           
+            res.to_csv(join(out, f"{store}_run.tsv"), sep="\t", index=False)
             del _model
-        
-        res = pd.concat(tmp_res)
     else:
-        models = {'baseline' : baseline, 'model' : bm25 >> pt.text.get_text(dataset, "text") >> MonoT5ReRanker(model=join(model_dir, model, 'model'))}
-        res = pt.Experiment(list(models.values()), eval.get_topics(), eval.get_qrels(), eval_metrics=["map", "ndcg_cut_10", "recip_rank"], names = list(models.keys()), baseline = 0)
-        qres = pt.Experiment(list(models.values()), eval.get_topics(), eval.get_qrels(), eval_metrics=["map", "ndcg_cut_10", "recip_rank"], names = list(models.keys()), perquery=True)
-        qres.to_csv(join(out, f"{model}_perquery.csv"))
-    res.to_csv(join(out, "results.csv"))
+        _model = bm25 >> pt.text.get_text(dataset, "text") >> MonoT5ReRanker(model=join(model_dir, model, 'model'))
+        res = _model.transform(eval.get_topics())
+        res.to_csv(join(out, f"{model}_run.tsv"), sep="\t", index=False)
     return "Success!"
 
 if __name__ == '__main__':
