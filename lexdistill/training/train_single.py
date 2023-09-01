@@ -32,6 +32,7 @@ def main(
                 'warmup_steps': warmup_steps,
                 'batch_size': batch_size,
                 'lr': lr,
+                'mode': mode,
             })
 
     corpus = irds.load(dataset_name)

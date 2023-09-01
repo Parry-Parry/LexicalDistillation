@@ -24,11 +24,13 @@ def main(
     if wandb_project is not None:
         wandb.init(project=wandb_project, config={
                 'variant': triples_file.split('/')[-1],
+                'teacher' : 'perfect',
                 'dataset': dataset_name,
                 'total_steps': total_steps,
                 'warmup_steps': warmup_steps,
                 'batch_size': batch_size,
                 'lr': lr,
+                'mode': 'solo_perfect',
             })
 
     corpus = irds.load(dataset_name)
