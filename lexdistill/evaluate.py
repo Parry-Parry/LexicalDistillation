@@ -18,13 +18,13 @@ def main(eval :str, run_dir : str, out_dir : str):
         if file.endswith(".gz"):
             name = file.split(".")[0]
             run = read_trec_run(join(run_dir, file))
-            res = evaluate.calc_aggregate(run, file)
+            res = evaluate.calc_aggregate(run)
             res = {str(k) : v for k, v in res.items()}
             res['name'] = name 
             df.append(res)
             
             per_query = []
-            for q_res in evaluator.iter_calc(res):
+            for q_res in evaluator.iter_calc(run):
                 q_res = {str(k) : v for k, v in q_res.items()}
                 q_res['name'] = name
                 per_query.append(q_res)
