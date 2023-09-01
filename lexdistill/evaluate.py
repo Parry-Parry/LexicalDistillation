@@ -25,7 +25,7 @@ def main(eval :str, run_dir : str, out_dir : str):
             
             per_query = []
             for q_res in evaluate.iter_calc(run):
-                q_res = {str(k) : v for k, v in q_res.items()}
+                q_res = {str(k) : v for k, v in q_res._asdict().items()}
                 q_res['name'] = name
                 per_query.append(q_res)
             
