@@ -130,7 +130,7 @@ class SingleTeacherLoader:
             x, y = self[i]
             xs.extend(x)
             ys.extend(y)
-        return self.tokenize(xs), torch.cat(ys, dim=0).view(-1, 1)
+        return self.tokenize(xs), torch.cat(ys).view(-1, 1)
     
 class PerfectMarginSingleLoader:
     teacher = None 
