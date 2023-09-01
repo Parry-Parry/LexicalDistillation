@@ -109,7 +109,7 @@ class SingleTeacherLoader:
         except KeyError:
             score = 0. if neg else 1.
 
-        return torch.tensor(score)
+        return score
 
     def format(self, q, d):
         return 'Query: ' + q + ' Document: ' + d + ' Relevant:'
@@ -130,8 +130,7 @@ class SingleTeacherLoader:
             x, y = self[i]
             xs.extend(x)
             ys.extend(y)
-        print(ys)
-        return self.tokenize(xs), torch.cat(ys).view(-1, 1)
+        return self.tokenize(xs), torch.tensor(ys).view(-1, 1)
 
 class OneSidedMarginLoader:
     teacher = None 
