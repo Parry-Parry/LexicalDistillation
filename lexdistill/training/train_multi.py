@@ -13,6 +13,7 @@ def main(
         teacher_file : str,
         dataset_name : str, 
         out_dir : str, 
+        mode : str = 'std',
         total_steps : int = 100000, 
         batch_size : int = 16, 
         lr : float = 0.001, 
@@ -37,8 +38,8 @@ def main(
     logging.info('loading model...')
     model = MonoT5Model.init()
 
-    logging.info('loading loader...')
-    loader = TeacherLoader(teacher_file, triples_file, corpus, model.tokenizer, batch_size=batch_size, shuffle=shuffle)
+    logging.info(f'loading loader with mode {mode}...')
+    loader = TeacherLoader(teacher_file, triples_file, corpus, model.tokenizer, mode=mode, batch_size=batch_size, shuffle=shuffle)
 
     opt = AdamW(model.parameters(), lr=lr)
     sched = get_linear_schedule_with_warmup(opt, num_warmup_steps=warmup_steps//batch_size, num_training_steps=total_steps//batch_size)
