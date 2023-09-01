@@ -8,6 +8,7 @@ import pandas as pd
 
 
 def main(eval :str, run_dir : str, out_dir : str):
+    os.makedirs(out_dir, exist_ok=True)
     files = [f for f in os.listdir(run_dir) if os.path.isfile(join(run_dir, f))]
     ds = irds.load(eval)
     qrels = ds.qrels_iter()
@@ -16,7 +17,7 @@ def main(eval :str, run_dir : str, out_dir : str):
     df = []
     for file in files:
         if file.endswith(".gz"):
-            name = file.split(".")[0]
+            name = file.strip('.gz')
             run = read_trec_run(join(run_dir, file))
             res = evaluate.calc_aggregate(run)
             res = {str(k) : v for k, v in res.items()}
