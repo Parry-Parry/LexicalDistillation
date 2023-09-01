@@ -1,21 +1,22 @@
 import pandas as pd
 import json
 import torch
+import os
 from typing import Any
 
 class TeacherLoader:
-    teacher = None 
+    teacher = {} 
     triples = None
     tokenizer_kwargs = {'padding' : 'longest', 'truncation' : True, 'return_tensors' : 'pt'}
     def __init__(self, 
-                 teacher_file : str, 
+                 teacher_dir : str, 
                  triples_file : str, 
                  corpus : Any,
                  tokenizer : Any,
                  batch_size : int = 16,
                  shuffle : bool = False,
                  tokenizer_kwargs : dict = None) -> None:
-        self.teacher_file = teacher_file
+        self.teacher_dir = teacher_dir
         self.triples_file = triples_file
         self.tokenizer = tokenizer
         self.corpus = corpus
@@ -27,8 +28,9 @@ class TeacherLoader:
         self.initialized = False
 
     def setup(self) -> None:
-        with open(self.teacher_file, 'r') as f:
-            self.teacher = json.load(f)
+        for i, file in enumerate(os.listdir(self.teacher_dir)):
+            with open(os.path.join(self.teacher_dir, file), 'r') as f:
+                self.teacher[i] = json.load(f)
         self.triples = pd.read_csv(self.triples_file, sep='\t', dtype={'qid':str, 'doc_id_a':str, 'doc_id_b':str}, index_col=False)
         if self.shuffle: self.triples = self.triples.sample(frac=1).reset_index(drop=True)
         self.docs = pd.DataFrame(self.corpus.docs_iter()).set_index("doc_id")["text"].to_dict()

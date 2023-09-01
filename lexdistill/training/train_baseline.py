@@ -50,7 +50,7 @@ def main(
     with _logger.pbar_raw(desc='training...', total=total_steps // batch_size) as pbar:
         total_loss = 0.
         for i in range(total_steps // batch_size):
-            x, y = loader.get_batch(i)
+            x, _ = loader.get_batch(i)
             x = x.to(model.device)
             pred = model.forward(x)
 
