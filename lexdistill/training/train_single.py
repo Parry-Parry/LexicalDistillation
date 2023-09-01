@@ -1,7 +1,7 @@
 from fire import Fire
 import os
 import ir_datasets as irds
-from lexdistill import SingleTeacherLoader, MarginMSELoss, MonoT5Model
+from lexdistill import SingleTeacherLoader, PerfectMarginSingleLoader, MarginMSELoss, MonoT5Model
 from transformers import AdamW, get_linear_schedule_with_warmup
 import logging
 import wandb
@@ -18,7 +18,8 @@ def main(
         lr : float = 0.001, 
         warmup_steps=0,
         shuffle=False,
-        wandb_project=None,):
+        wandb_project=None,
+        perfect_margin=False,):
 
     os.makedirs(out_dir, exist_ok=True)
 
@@ -39,6 +40,7 @@ def main(
     model = MonoT5Model.init()
 
     logging.info('loading loader...')
+    load = PerfectMarginSingleLoader if perfect_margin else SingleTeacherLoader
     loader = SingleTeacherLoader(teacher_file, triples_file, corpus, model.tokenizer, batch_size=batch_size, shuffle=shuffle)
 
     opt = AdamW(model.parameters(), lr=lr)
