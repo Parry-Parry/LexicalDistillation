@@ -21,6 +21,7 @@ def main(eval :str, run_dir : str, out_dir : str):
             res = evaluate.calc_aggregate(run)
             res = {str(k) : v for k, v in res.items()}
             res['name'] = name 
+            print(res)
             df.append(res)
             
             per_query = []
@@ -33,7 +34,7 @@ def main(eval :str, run_dir : str, out_dir : str):
             # pivot metric per query_id 
             per_query = per_query.pivot(index='query_id', columns='measure', values='value')
             print(per_query.head())
-            per_query.to_csv(join(out_dir, f"{name}_per_query.tsv", index=False, sep='\t'))
+            per_query.to_csv(join(out_dir, f"{name}_per_query.tsv"), index=False, sep='\t')
     
     df = pd.DataFrame.from_records(df)
     df.to_csv(join(out_dir, 'metrics.tsv'), sep='\t', index=False)
