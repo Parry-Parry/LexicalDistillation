@@ -23,13 +23,12 @@ def main(model_dir : str, out : str, eval_name : str, baseline : str, model : st
                 continue
             _model = bm25 >> pt.text.get_text(dataset, "text") >> MonoT5ReRanker(model=join(model_dir, store, 'model'))
             res = _model.transform(eval.get_topics())
-           
-            res.to_csv(join(out, f"{store}_run.tsv"), sep="\t", index=False)
+            pt.io.write_results(res, join(out, f"{store}_run.gz"))
             del _model
     else:
         _model = bm25 >> pt.text.get_text(dataset, "text") >> MonoT5ReRanker(model=join(model_dir, model, 'model'))
         res = _model.transform(eval.get_topics())
-        res.to_csv(join(out, f"{model}_run.tsv"), sep="\t", index=False)
+        pt.io.write_results(res, join(out, f"{model}_run.gz"))
     return "Success!"
 
 if __name__ == '__main__':
