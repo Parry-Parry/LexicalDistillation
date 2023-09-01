@@ -12,6 +12,7 @@ def main(eval :str, run_dir : str, out_dir : str):
     ds = irds.load(eval)
     qrels = pd.DataFrame(ds.qrels_iter())
     metrics = [AP(rel=2), NDCG(rel=2, cutoff=10), R@1000, P@10, P@1000, RR(rel=2)]
+    print(qrels.head())
     evaluate = evaluator(metrics, qrels)
     df = []
     for file in files:
