@@ -24,7 +24,7 @@ def main(eval :str, run_dir : str, out_dir : str):
             df.append(res)
             
             per_query = []
-            for q_res in evaluator.iter_calc(run):
+            for q_res in evaluate.iter_calc(run):
                 q_res = {str(k) : v for k, v in q_res.items()}
                 q_res['name'] = name
                 per_query.append(q_res)
