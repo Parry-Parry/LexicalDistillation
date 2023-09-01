@@ -14,10 +14,9 @@ def main(model_dir : str, out : str, eval_name : str, baseline : str, model : st
     baseline = bm25 >> pt.text.get_text(dataset, "text") >> MonoT5ReRanker(model=join(baseline, 'model'))
     os.makedirs(out, exist_ok=True)
     if not model:
-        dirs = [f for f in os.listdir(model_dir) if os.path.isdir(join(model_dir, f))]
+        dirs = [f for f in os.listdir(model_dir) if os.path.isdir(join(model_dir, f)) and 'baseline' not in f]
         tmp_res = []
-        tmp_qres = []
-        for i, store in enumerate(dirs):
+        for _, store in enumerate(dirs):
             if os.path.exists(join(out, f"{store}_results.csv")):
                 continue
             _model = bm25 >> pt.text.get_text(dataset, "text") >> MonoT5ReRanker(model=join(model_dir, store, 'model'))
@@ -27,18 +26,17 @@ def main(model_dir : str, out : str, eval_name : str, baseline : str, model : st
             except:
                 print(f"Error in {store}")
                 continue
+            tmp_res.append(res)
             res.to_csv(join(out, f"{store}_results.csv"))
             del _model
         
         res = pd.concat(tmp_res)
-        qres = pd.concat(tmp_qres)
     else:
         models = {'baseline' : baseline, 'model' : bm25 >> pt.text.get_text(dataset, "text") >> MonoT5ReRanker(model=join(model_dir, model, 'model'))}
         res = pt.Experiment(list(models.values()), eval.get_topics(), eval.get_qrels(), eval_metrics=["map", "ndcg_cut_10", "recip_rank"], names = list(models.keys()), baseline = 0)
         qres = pt.Experiment(list(models.values()), eval.get_topics(), eval.get_qrels(), eval_metrics=["map", "ndcg_cut_10", "recip_rank"], names = list(models.keys()), perquery=True)
-        
+        qres.to_csv(join(out, f"{model}_perquery.csv"))
     res.to_csv(join(out, "results.csv"))
-    qres.to_csv(join(out, "perqueryresults.csv"))
     return "Success!"
 
 if __name__ == '__main__':
