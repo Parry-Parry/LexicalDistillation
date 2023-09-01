@@ -310,5 +310,5 @@ class PerfectLoader:
         for i in range(idx, min(len(self.triples), idx + self.batch_size)):
             x = self[i]
             xs.extend(x)
-        y = torch.tensor([1. if i % 2 == 0 else 0. for i in range(len(xs))])
+        y = torch.tensor([[1.] if i % 2 == 0 else [0.] for i in range(len(xs))])
         return self.tokenize(xs), y
