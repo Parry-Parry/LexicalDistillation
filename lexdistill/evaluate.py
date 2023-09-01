@@ -22,19 +22,6 @@ def main(eval :str, run_dir : str, out_dir : str):
             res = {str(k) : v for k, v in res.items()}
             res['name'] = name 
             df.append(res)
-            
-            per_query = []
-            for q_res in evaluate.iter_calc(run):
-                q_res = {str(k) : v for k, v in q_res._asdict().items()}
-                q_res['name'] = name
-                print(q_res)
-                per_query.append(q_res)
-            
-            per_query = pd.DataFrame.from_records(per_query)
-            # pivot metric per query_id 
-            per_query = per_query.pivot(index='query_id', columns='measure', values='value')
-            print(per_query.head())
-            per_query.to_csv(join(out_dir, f"{name}_per_query.tsv"), index=False, sep='\t')
     
     df = pd.DataFrame.from_records(df)
     df.to_csv(join(out_dir, 'metrics.tsv'), sep='\t', index=False)
