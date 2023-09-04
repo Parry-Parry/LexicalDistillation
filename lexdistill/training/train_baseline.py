@@ -64,6 +64,7 @@ def main(
 
             if wandb_project is not None:
                 wandb.log({'loss': loss.item()})
+                wandb.log({'lr': sched.get_last_lr()[0]})
 
             total_loss += loss.item()
 
