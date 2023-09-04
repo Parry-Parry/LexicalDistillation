@@ -6,7 +6,7 @@ from os.path import join
 ARGS = {
     'bm25.one_sided.teacher' : {
         'script' : 'lexdistill.training.train_single',
-        'model' : 'one_sided'
+        'mode' : 'one_sided'
     },
     'bm25.perfect_one_sided.teacher' : {
         'script' : 'lexdistill.training.train_single',
