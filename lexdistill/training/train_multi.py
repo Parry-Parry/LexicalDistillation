@@ -2,7 +2,7 @@ from fire import Fire
 import os
 import ir_datasets as irds
 from lexdistill import TeacherLoader, MarginMSELoss, MonoT5Model
-from transformers import AdamW, get_constant_schedule_with_warmup
+from transformers import AdamW, get_cosine_schedule_with_warmup
 import logging
 import wandb
 
@@ -44,7 +44,7 @@ def main(
     loader = TeacherLoader(teacher_file, triples_file, corpus, model.tokenizer, mode=mode, batch_size=batch_size, shuffle=shuffle)
 
     opt = AdamW(model.parameters(), lr=lr)
-    sched = get_constant_schedule_with_warmup(opt, num_warmup_steps=warmup_steps//batch_size)
+    sched = get_cosine_schedule_with_warmup(opt, num_warmup_steps=warmup_steps//batch_size, num_training_steps=total_steps//batch_size)
 
     logging.info('init loader...')
     loader.setup()
