@@ -43,7 +43,7 @@ def main(model_dir : str,
         cmd = ['python', 
                '-m', 
                args['script'], 
-               '--triples_file' 
+               '--triples_file', 
                triples_file, 
                '--teacher_file',
                teacher_file, 
@@ -55,13 +55,14 @@ def main(model_dir : str,
                str(total_steps), 
                 '--batch_size',
                str(BATCH_SIZE), 
-                '--warm8up_steps',
-               str(WARMUP_STEPS)
+                '--warmup_steps',
+               str(WARMUP_STEPS),
                 ]
         if args['mode'] is not None:
             cmd.extend(['--mode', args['mode']])
         if wandb_project is not None:
             cmd.extend(['--wandb_project', wandb_project])
+        logging.info(f'Running {" ".join(cmd)}...')
         sp.run(cmd)
 
     return "Done!"
