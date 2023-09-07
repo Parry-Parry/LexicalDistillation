@@ -1,7 +1,7 @@
 from fire import Fire
 import os
 import ir_datasets as irds
-from lexdistill import PerfectLoader, MarginMSELoss, MonoT5Model
+from lexdistill import T5TeacherLoader, MarginMSELoss, MonoT5Model
 from transformers import AdamW, get_linear_schedule_with_warmup
 import logging
 import wandb
@@ -10,8 +10,10 @@ _logger = irds.log.easy()
 
 def main(
         triples_file : str, 
+        teacher_file : str,
         dataset_name : str, 
         out_dir : str, 
+        mode : str = 'std',
         total_steps : int = 100000, 
         batch_size : int = 16, 
         lr : float = 0.001, 
@@ -25,13 +27,13 @@ def main(
     if wandb_project is not None:
         wandb.init(project=wandb_project, config={
                 'variant': triples_file.split('/')[-1],
-                'teacher' : 'perfect',
+                'teacher' : 'ensemble',
                 'dataset': dataset_name,
                 'total_steps': total_steps,
-                'warmup_steps': warmup_steps,
                 'batch_size': batch_size * grad_accum,
                 'lr': lr,
-                'mode': 'solo_perfect',
+                'warmup_steps': warmup_steps,
+                'mode': mode,
             })
 
     corpus = irds.load(dataset_name)
@@ -39,8 +41,8 @@ def main(
     logging.info('loading model...')
     model = MonoT5Model.init()
 
-    logging.info(f'loading loader...')
-    loader = PerfectLoader(triples_file, corpus, model.tokenizer, batch_size=batch_size, shuffle=shuffle)
+    logging.info(f'loading loader with mode {mode}...')
+    loader = T5TeacherLoader(teacher_file, triples_file, corpus, model.tokenizer, mode=mode, batch_size=batch_size, shuffle=shuffle)
 
     opt = AdamW(model.parameters(), lr=lr)
     sched = get_linear_schedule_with_warmup(opt, num_warmup_steps=warmup_steps//(batch_size*grad_accum), num_training_steps=total_steps//(batch_size*grad_accum))
@@ -56,7 +58,8 @@ def main(
             x.to(model.device)
             y.to(model.device)
             pred = model.forward(x)
-            loss = MarginMSELoss(pred, y) / grad_accum
+
+            loss = MarginMSELoss(pred, y)
             loss.backward()
 
             if i + 1 % grad_accum == 0 or i == total_steps // batch_size - 1:

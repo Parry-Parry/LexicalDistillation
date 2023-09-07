@@ -1,7 +1,7 @@
 from fire import Fire
 import os
 import ir_datasets as irds
-from lexdistill import SingleTeacherLoader, MarginMSELoss, MonoT5Model
+from lexdistill import T5SingleTeacherLoader, MarginMSELoss, DualMonoT5Model
 from transformers import AdamW, get_linear_schedule_with_warmup
 import logging
 import wandb
@@ -33,16 +33,16 @@ def main(
                 'warmup_steps': warmup_steps,
                 'batch_size': batch_size * grad_accum,
                 'lr': lr,
-                'mode': mode,
+                'mode': 'dual_ablation',
             })
 
     corpus = irds.load(dataset_name)
 
     logging.info('loading model...')
-    model = MonoT5Model.init()
+    model = DualMonoT5Model.init()
 
     logging.info(f'loading loader with mode {mode}...')
-    loader = SingleTeacherLoader(teacher_file, triples_file, corpus, model.tokenizer, mode=mode, batch_size=batch_size, shuffle=shuffle)
+    loader = T5SingleTeacherLoader(teacher_file, triples_file, corpus, model.tokenizer, mode=mode, batch_size=batch_size, shuffle=shuffle)
 
     opt = AdamW(model.parameters(), lr=lr)
     sched = get_linear_schedule_with_warmup(opt, num_warmup_steps=warmup_steps//(batch_size*grad_accum), num_training_steps=total_steps//(batch_size*grad_accum))
@@ -57,9 +57,9 @@ def main(
             x, y = loader.get_batch(i)
             x.to(model.device)
             y.to(model.device)
-            pred = model.forward(x)
+            pred, ce = model.forward(x)
 
-            loss = MarginMSELoss(pred, y)
+            loss = MarginMSELoss(pred, y) + ce
             loss.backward()
 
             if i + 1 % grad_accum == 0 or i == total_steps // batch_size - 1:

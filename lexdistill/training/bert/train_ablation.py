@@ -1,7 +1,7 @@
 from fire import Fire
 import os
 import ir_datasets as irds
-from lexdistill import SingleTeacherLoader, MarginMSELoss, DualMonoT5Model
+from lexdistill import T5SingleTeacherLoader, MarginMSELoss, DualMonoT5Model
 from transformers import AdamW, get_linear_schedule_with_warmup
 import logging
 import wandb
@@ -42,7 +42,7 @@ def main(
     model = DualMonoT5Model.init()
 
     logging.info(f'loading loader with mode {mode}...')
-    loader = SingleTeacherLoader(teacher_file, triples_file, corpus, model.tokenizer, mode=mode, batch_size=batch_size, shuffle=shuffle)
+    loader = T5SingleTeacherLoader(teacher_file, triples_file, corpus, model.tokenizer, mode=mode, batch_size=batch_size, shuffle=shuffle)
 
     opt = AdamW(model.parameters(), lr=lr)
     sched = get_linear_schedule_with_warmup(opt, num_warmup_steps=warmup_steps//(batch_size*grad_accum), num_training_steps=total_steps//(batch_size*grad_accum))
