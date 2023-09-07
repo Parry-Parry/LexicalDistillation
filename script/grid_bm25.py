@@ -32,7 +32,9 @@ WARMUP_STEPS = 2500
 def main(model_dir : str, 
          triples_file : str, 
          teacher_file : str, 
-         total_steps : int = 30000, 
+         total_steps : int = 300000, 
+         grad_accum : int = 1,
+         batch_size : int = BATCH_SIZE,
          wandb_project : str = None):
     
     for name, args in ARGS.items():
@@ -54,7 +56,9 @@ def main(model_dir : str,
                 '--total_steps', 
                str(total_steps), 
                 '--batch_size',
-               str(BATCH_SIZE), 
+               str(batch_size), 
+                '--grad_accum',
+                str(grad_accum),
                 '--warmup_steps',
                str(WARMUP_STEPS),
                 ]

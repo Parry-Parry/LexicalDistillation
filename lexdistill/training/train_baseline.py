@@ -15,6 +15,7 @@ def main(
         total_steps : int = 100000, 
         batch_size : int = 16, 
         lr : float = 0.001, 
+        grad_accum : int = 1,
         warmup_steps=0,
         shuffle=False,
         wandb_project=None,):
@@ -27,14 +28,13 @@ def main(
                 'teacher': 'none',
                 'dataset': dataset_name,
                 'total_steps': total_steps,
-                'batch_size': batch_size,
+                'batch_size': batch_size * grad_accum,
                 'lr': lr,
                 'warmup_steps': warmup_steps,
                 'mode': 'baseline',
             })
 
     corpus = irds.load(dataset_name)
-    #loss_fn = nn.CrossEntropyLoss(ignore_index=-100, reduction='mean')
 
     logging.info('loading model...')
     model = Baseline.init()
@@ -43,7 +43,7 @@ def main(
     loader = StandardLoader(triples_file, corpus, model.tokenizer, batch_size=batch_size, shuffle=shuffle)
 
     opt = AdamW(model.parameters(), lr=lr)
-    sched = get_linear_schedule_with_warmup(opt, num_warmup_steps=warmup_steps//batch_size, num_training_steps=total_steps//batch_size)
+    sched = get_linear_schedule_with_warmup(opt, num_warmup_steps=warmup_steps//(batch_size*grad_accum), num_training_steps=total_steps//(batch_size*grad_accum))
 
     logging.info('init loader...')
     loader.setup()
@@ -56,11 +56,13 @@ def main(
             x = x.to(model.device)
             pred = model.forward(x)
 
-            opt.zero_grad()
             loss = pred.loss
             loss.backward()
-            opt.step()
-            sched.step()
+
+            if i + 1 % grad_accum == 0 or i == total_steps // batch_size - 1:
+                opt.step()
+                opt.zero_grad()
+                sched.step()
 
             if wandb_project is not None:
                 wandb.log({'loss': loss.item()})
