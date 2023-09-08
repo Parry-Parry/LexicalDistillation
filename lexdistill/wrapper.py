@@ -113,7 +113,7 @@ class MonoBERTModel(nn.Module):
     
     @staticmethod
     def init():
-        model = ElectraForSequenceClassification.from_pretrained('google/electra-base-discriminator')
+        model = ElectraForSequenceClassification.from_pretrained('google/electra-base-discriminator', num_labels=2)
         tokenizer = AutoTokenizer.from_pretrained('google/electra-base-discriminator')
         return MonoBERTModel(model, tokenizer)
 
@@ -143,7 +143,7 @@ class BaselineBERT(nn.Module):
     
     @staticmethod
     def init():
-        model = ElectraForSequenceClassification.from_pretrained('google/electra-base-discriminator')
+        model = ElectraForSequenceClassification.from_pretrained('google/electra-base-discriminator', num_labels=2)
         tokenizer = AutoTokenizer.from_pretrained('google/electra-base-discriminator')
         return BaselineBERT(model, tokenizer)
 
@@ -172,7 +172,7 @@ class DualBERTModel(nn.Module):
     
     @staticmethod
     def init():
-        model = ElectraForSequenceClassification.from_pretrained('google/electra-base-discriminator')
+        model = ElectraForSequenceClassification.from_pretrained('google/electra-base-discriminator', num_labels=2)
         tokenizer = AutoTokenizer.from_pretrained('google/electra-base-discriminator')
         return DualBERTModel(model, tokenizer)
 
