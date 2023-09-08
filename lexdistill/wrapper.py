@@ -35,7 +35,7 @@ class MonoT5Model(nn.Module):
         x['labels'] = self.gen_labels(x['input_ids'])
         logits = self.model(**x).logits
         result = logits[:, 0, (self.rel, self.nrel)]
-        return F.log_softmax(result, dim=1)[:, 0].cpu()
+        return F.log_softmax(result, dim=1)[:, 0]
 
 class BaselineT5(nn.Module):
     def __init__(self, model, tokenizer):
@@ -102,7 +102,7 @@ class DualMonoT5Model(nn.Module):
         output = self.model(**x)
         logits = output.logits
         result = logits[:, 0, (self.rel, self.nrel)]
-        return F.log_softmax(result, dim=1)[:, 0].cpu(), output.loss
+        return F.log_softmax(result, dim=1)[:, 0], output.loss
 
 class MonoBERTModel(nn.Module):
     def __init__(self, model, tokenizer):
@@ -132,7 +132,7 @@ class MonoBERTModel(nn.Module):
     def forward(self, x):
         x['labels'] = self.gen_labels(x['input_ids'])
         logits = self.model(**x).logits
-        return logits[:, 1].cpu()
+        return logits[:, 1]
 
 class BaselineBERT(nn.Module):
     def __init__(self, model, tokenizer):
@@ -192,7 +192,7 @@ class DualBERTModel(nn.Module):
         x['labels'] = self.gen_labels(x['input_ids'])
         output = self.model(**x)
         logits = output.logits
-        result = logits[:, 1].cpu()
+        result = logits[:, 1]
         return result, output.loss
         
 
