@@ -113,15 +113,15 @@ class MonoBERTModel(nn.Module):
     
     @staticmethod
     def init():
-        model = ElectraForSequenceClassification.from_pretrained('t5-base')
-        tokenizer = AutoTokenizer.from_pretrained('t5-base')
+        model = ElectraForSequenceClassification.from_pretrained('google/electra-base-discriminator')
+        tokenizer = AutoTokenizer.from_pretrained('google/electra-base-discriminator')
         return MonoBERTModel(model, tokenizer)
 
     def save_pretrained(self, path):
         self.model.save_pretrained(path)
     
     def gen_labels(self, x):
-        return [[0., 1.] if i % 2 == 0 else [1., 0.] for i in range(len(x))]
+        return torch.tensor([[0., 1.] if i % 2 == 0 else [1., 0.] for i in range(len(x))]).to(self.device)
     
     def train(self):
         self.model.train()
@@ -143,15 +143,15 @@ class BaselineBERT(nn.Module):
     
     @staticmethod
     def init():
-        model = ElectraForSequenceClassification.from_pretrained('t5-base')
-        tokenizer = AutoTokenizer.from_pretrained('t5-base')
+        model = ElectraForSequenceClassification.from_pretrained('google/electra-base-discriminator')
+        tokenizer = AutoTokenizer.from_pretrained('google/electra-base-discriminator')
         return BaselineBERT(model, tokenizer)
 
     def save_pretrained(self, path):
         self.model.save_pretrained(path)
     
     def gen_labels(self, x):
-        return [[0., 1.] if i % 2 == 0 else [1., 0.] for i in range(len(x))]
+        return torch.tensor([[0., 1.] if i % 2 == 0 else [1., 0.] for i in range(len(x))]).to(self.device)
     
     def train(self):
         self.model.train()
@@ -172,15 +172,15 @@ class DualBERTModel(nn.Module):
     
     @staticmethod
     def init():
-        model = ElectraForSequenceClassification.from_pretrained('t5-base')
-        tokenizer = AutoTokenizer.from_pretrained('t5-base')
+        model = ElectraForSequenceClassification.from_pretrained('google/electra-base-discriminator')
+        tokenizer = AutoTokenizer.from_pretrained('google/electra-base-discriminator')
         return DualBERTModel(model, tokenizer)
 
     def save_pretrained(self, path):
         self.model.save_pretrained(path)
     
     def gen_labels(self, x):
-        return [[0., 1.] if i % 2 == 0 else [1., 0.] for i in range(len(x))]
+        return torch.tensor([[0., 1.] if i % 2 == 0 else [1., 0.] for i in range(len(x))]).to(self.device)
     
     def train(self):
         self.model.train()
