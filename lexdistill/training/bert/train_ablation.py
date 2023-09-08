@@ -55,8 +55,8 @@ def main(
         total_loss = 0.
         for i in range(total_steps // batch_size):
             x, y = loader.get_batch(i)
-            x.to(model.device)
-            y.to(model.device)
+            x = x.to(model.device)
+            y = y.to(model.device)
             pred, ce = model.forward(x)
 
             loss = MarginMSELoss(pred, y) + ce
