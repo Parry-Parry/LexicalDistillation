@@ -64,9 +64,9 @@ def main(
             loss = MarginMSELoss(pred, y) / grad_accum
             loss.backward()
 
-            logging.info(i+1 % grad_accum)
+            print(i + 1 % grad_accum == 0)
 
-            if i + 1 % grad_accum == 0 or i == total_steps // batch_size - 1:
+            if (i + 1 % grad_accum == 0) or (i == total_steps // batch_size - 1):
                 logging.info(f'optimizing...')
                 opt.step()
                 opt.zero_grad()
