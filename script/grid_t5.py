@@ -35,6 +35,7 @@ def main(model_dir : str,
          total_steps : int = 300000, 
          grad_accum : int = 1,
          batch_size : int = BATCH_SIZE,
+         warmup_steps : int = WARMUP_STEPS,
          wandb_project : str = None):
     
     for name, args in ARGS.items():
@@ -60,7 +61,7 @@ def main(model_dir : str,
                 '--grad_accum',
                 str(grad_accum),
                 '--warmup_steps',
-               str(WARMUP_STEPS),
+               str(warmup_steps),
                 ]
         if args['mode'] is not None:
             cmd.extend(['--mode', args['mode']])
