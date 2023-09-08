@@ -59,6 +59,7 @@ def main(
             x, y = loader.get_batch(i)
             x = x.to(model.device)
             y = y.to(model.device)
+            logging.info('forward pass...')
             pred = model.forward(x)
 
             loss = MarginMSELoss(pred, y) / grad_accum
