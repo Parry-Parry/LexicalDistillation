@@ -5,23 +5,23 @@ from os.path import join
 
 ARGS = {
     'bm25.one_sided.teacher' : {
-        'script' : 'lexdistill.training.train_single',
+        'script' : 'lexdistill.training.t5.train_single',
         'mode' : 'one_sided'
     },
     'bm25.perfect_one_sided.teacher' : {
-        'script' : 'lexdistill.training.train_single',
+        'script' : 'lexdistill.training.t5.train_single',
         'mode' : 'perfect_one_sided'
     },
     'bm25.perfect.teacher' : {
-        'script' : 'lexdistill.training.train_single',
+        'script' : 'lexdistill.training.t5.train_single',
         'mode' : 'perfect'
     },
     'bm25.teacher' : {
-        'script' : 'lexdistill.training.train_single',
+        'script' : 'lexdistill.training.t5.train_single',
         'mode' : 'std'
     },
     'perfect' : {
-        'script' : 'lexdistill.training.train_perfect',
+        'script' : 'lexdistill.training.t5.train_perfect',
         'mode' : None
     }
 }

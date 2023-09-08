@@ -1,7 +1,7 @@
 from fire import Fire
 import os
 import ir_datasets as irds
-from lexdistill import T5PerfectLoader, MarginMSELoss, MonoT5Model
+from lexdistill import BERTPerfectLoader, MarginMSELoss, MonoBERTModel
 from transformers import AdamW, get_linear_schedule_with_warmup
 import logging
 import wandb
@@ -37,10 +37,10 @@ def main(
     corpus = irds.load(dataset_name)
 
     logging.info('loading model...')
-    model = MonoT5Model.init()
+    model = MonoBERTModel.init()
 
     logging.info(f'loading loader...')
-    loader = T5PerfectLoader(triples_file, corpus, model.tokenizer, batch_size=batch_size, shuffle=shuffle)
+    loader = BERTPerfectLoader(triples_file, corpus, model.tokenizer, batch_size=batch_size, shuffle=shuffle)
 
     opt = AdamW(model.parameters(), lr=lr)
     sched = get_linear_schedule_with_warmup(opt, num_warmup_steps=warmup_steps//(batch_size*grad_accum), num_training_steps=total_steps//(batch_size*grad_accum))

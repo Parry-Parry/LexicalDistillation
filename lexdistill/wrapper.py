@@ -1,7 +1,7 @@
 import torch
 from torch import nn
 import torch.nn.functional as F
-from transformers import T5ForConditionalGeneration, T5Tokenizer
+from transformers import T5ForConditionalGeneration, T5Tokenizer, ElectraForSequenceClassification, AutoTokenizer
 
 class MonoT5Model(nn.Module):
     def __init__(self, model, tokenizer):
@@ -113,15 +113,15 @@ class MonoBERTModel(nn.Module):
     
     @staticmethod
     def init():
-        model = T5ForConditionalGeneration.from_pretrained('t5-base')
-        tokenizer = T5Tokenizer.from_pretrained('t5-base')
+        model = ElectraForSequenceClassification.from_pretrained('t5-base')
+        tokenizer = AutoTokenizer.from_pretrained('t5-base')
         return MonoBERTModel(model, tokenizer)
 
     def save_pretrained(self, path):
         self.model.save_pretrained(path)
     
     def gen_labels(self, x):
-        return self.tokenizer(['true' if i % 2 == 0 else 'false' for i in range(len(x))], return_tensors='pt', padding=True).input_ids.to(self.device)
+        return [[0., 1.] if i % 2 == 0 else [1., 0.] for i in range(len(x))]
     
     def train(self):
         self.model.train()
@@ -132,8 +132,7 @@ class MonoBERTModel(nn.Module):
     def forward(self, x):
         x['labels'] = self.gen_labels(x['input_ids'])
         logits = self.model(**x).logits
-        result = logits[:, 0, (self.rel, self.nrel)]
-        return F.log_softmax(result, dim=1)[:, 0].cpu()
+        return logits[:, 1].cpu()
 
 class BaselineBERT(nn.Module):
     def __init__(self, model, tokenizer):
@@ -141,21 +140,18 @@ class BaselineBERT(nn.Module):
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         self.model = model.to(self.device)
         self.tokenizer = tokenizer
-
-        self.rel = self.tokenizer.encode('true')[0]
-        self.nrel = self.tokenizer.encode('false')[0]
     
     @staticmethod
     def init():
-        model = T5ForConditionalGeneration.from_pretrained('t5-base')
-        tokenizer = T5Tokenizer.from_pretrained('t5-base')
+        model = ElectraForSequenceClassification.from_pretrained('t5-base')
+        tokenizer = AutoTokenizer.from_pretrained('t5-base')
         return BaselineBERT(model, tokenizer)
 
     def save_pretrained(self, path):
         self.model.save_pretrained(path)
     
     def gen_labels(self, x):
-        return self.tokenizer(['true' if i % 2 == 0 else 'false' for i in range(len(x))], return_tensors='pt', padding=True).input_ids.to(self.device)
+        return [[0., 1.] if i % 2 == 0 else [1., 0.] for i in range(len(x))]
     
     def train(self):
         self.model.train()
@@ -166,6 +162,38 @@ class BaselineBERT(nn.Module):
     def forward(self, x):
         x['labels'] = self.gen_labels(x['input_ids'])
         return self.model(**x)
+
+class DualBERTModel(nn.Module):
+    def __init__(self, model, tokenizer):
+        super().__init__()
+        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        self.model = model.to(self.device)
+        self.tokenizer = tokenizer
+    
+    @staticmethod
+    def init():
+        model = ElectraForSequenceClassification.from_pretrained('t5-base')
+        tokenizer = AutoTokenizer.from_pretrained('t5-base')
+        return DualBERTModel(model, tokenizer)
+
+    def save_pretrained(self, path):
+        self.model.save_pretrained(path)
+    
+    def gen_labels(self, x):
+        return [[0., 1.] if i % 2 == 0 else [1., 0.] for i in range(len(x))]
+    
+    def train(self):
+        self.model.train()
+    
+    def parameters(self):
+        return self.model.parameters()
+    
+    def forward(self, x):
+        x['labels'] = self.gen_labels(x['input_ids'])
+        output = self.model(**x)
+        logits = output.logits
+        result = logits[:, 1].cpu()
+        return result, output.loss
         
 
 

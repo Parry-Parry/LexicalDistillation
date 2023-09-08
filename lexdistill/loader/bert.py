@@ -101,23 +101,24 @@ class BERTTeacherLoader:
     def format(self, q, d):
         return 'Query: ' + q + ' Document: ' + d + ' Relevant:'
     
-    def tokenize(self, x):
-        return self.tokenizer(x, **self.tokenizer_kwargs)
+    def tokenize(self, q, d):
+        return self.tokenizer(q, d, **self.tokenizer_kwargs)
     
     def __getitem__(self, idx):
         item = self.triples.iloc[idx]
-        x = [self.format(self.queries[item['qid']], self.docs[item['doc_id_a']]), self.format(self.queries[item['qid']], self.docs[item['doc_id_b']])]
+        q, d = [self.queries[item['qid']]]*2, [self.docs[item['doc_id_a']], self.docs[item['doc_id_b']]] 
         y = [self.get_teacher_scores(item['qid'], item['doc_id_a'], neg=False), self.get_teacher_scores(item['qid'], item['doc_id_b'], neg=True)]
-        return x, y
+        return q, d, y
 
     def get_batch(self, idx):
-        xs = []
+        q, d = [], []
         ys = []
         for i in range(idx, min(len(self.triples), idx + self.batch_size)):
-            x, y = self[i]
-            xs.extend(x)
+            _q, _d, y = self[i]
+            q.extend(_q)
+            d.extend(_d)
             ys.extend(y)
-        return self.tokenize(xs), torch.tensor(ys)
+        return self.tokenize(q, d), torch.tensor(ys)
 
 class BERTSingleTeacherLoader:
     teacher = None 
@@ -196,26 +197,24 @@ class BERTSingleTeacherLoader:
 
         return score
     
-    def format(self, q, d):
-        return 'Query: ' + q + ' Document: ' + d + ' Relevant:'
-    
-    def tokenize(self, x):
-        return self.tokenizer(x, **self.tokenizer_kwargs)
+    def tokenize(self, q, d):
+        return self.tokenizer(q, d, **self.tokenizer_kwargs)
     
     def __getitem__(self, idx):
         item = self.triples.iloc[idx]
-        x = [self.format(self.queries[item['qid']], self.docs[item['doc_id_a']]), self.format(self.queries[item['qid']], self.docs[item['doc_id_b']])]
+        q, d = [self.queries[item['qid']]]*2, [self.docs[item['doc_id_a']], self.docs[item['doc_id_b']]] 
         y = [self.get_teacher_scores(item['qid'], item['doc_id_a'], neg=False), self.get_teacher_scores(item['qid'], item['doc_id_b'], neg=True)]
-        return x, y
+        return q, d, y
 
     def get_batch(self, idx):
-        xs = []
+        q, d = [], []
         ys = []
         for i in range(idx, min(len(self.triples), idx + self.batch_size)):
-            x, y = self[i]
-            xs.extend(x)
+            _q, _d, y = self[i]
+            q.extend(_q)
+            d.extend(_d)
             ys.extend(y)
-        return self.tokenize(xs), torch.tensor(ys)
+        return self.tokenize(q, d), torch.tensor(ys)
 
 class BERTStandardLoader:
     teacher = None 
@@ -249,21 +248,21 @@ class BERTStandardLoader:
     def format(self, q, d):
         return 'Query: ' + q + ' Document: ' + d + ' Relevant:'
     
-    def tokenize(self, x):
-        return self.tokenizer(x, **self.tokenizer_kwargs)
+    def tokenize(self, q, d):
+        return self.tokenizer(q, d, **self.tokenizer_kwargs)
     
     def __getitem__(self, idx):
         item = self.triples.iloc[idx]
-        x = [self.format(self.queries[item['qid']], self.docs[item['doc_id_a']]), self.format(self.queries[item['qid']], self.docs[item['doc_id_b']])]
-        return x
+        return [self.queries[item['qid']]]*2, [self.docs[item['doc_id_a']], self.docs[item['doc_id_b']]] 
 
     def get_batch(self, idx):
-        xs = []
+        q, d = [], []
         for i in range(idx, min(len(self.triples), idx + self.batch_size)):
-            x = self[i]
-            xs.extend(x)
-        y = self.tokenize(['true' if i % 2 == 0 else 'false' for i in range(len(xs))]).input_ids
-        return self.tokenize(xs), y
+            _q, _d = self[i]
+            q.extend(_q)
+            d.extend(_d)
+        y = torch.tensor([[0., 1.] if i % 2 == 0 else [1., 0.] for i in range(len(d))])
+        return self.tokenize(q, d), y
 
 class BERTPerfectLoader:
     teacher = None 
@@ -293,22 +292,19 @@ class BERTPerfectLoader:
         self.queries = pd.DataFrame(self.corpus.queries_iter()).set_index("query_id")["text"].to_dict()
 
         self.initialized = True
-
-    def format(self, q, d):
-        return 'Query: ' + q + ' Document: ' + d + ' Relevant:'
     
-    def tokenize(self, x):
-        return self.tokenizer(x, **self.tokenizer_kwargs)
+    def tokenize(self, q, d):
+        return self.tokenizer(q, d, **self.tokenizer_kwargs)
     
     def __getitem__(self, idx):
         item = self.triples.iloc[idx]
-        x = [self.format(self.queries[item['qid']], self.docs[item['doc_id_a']]), self.format(self.queries[item['qid']], self.docs[item['doc_id_b']])]
-        return x
+        return [self.queries[item['qid']]]*2, [self.docs[item['doc_id_a']], self.docs[item['doc_id_b']]] 
 
     def get_batch(self, idx):
-        xs = []
+        q, d = [], []
         for i in range(idx, min(len(self.triples), idx + self.batch_size)):
-            x = self[i]
-            xs.extend(x)
-        y = torch.tensor([[1.] if i % 2 == 0 else [0.] for i in range(len(xs))])
-        return self.tokenize(xs), y
+            _q, _d = self[i]
+            q.extend(_q)
+            d.extend(_d)
+        y = torch.tensor([[1.] if i % 2 == 0 else [0.] for i in range(len(d))])
+        return self.tokenize(q, d), y

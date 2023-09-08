@@ -1,7 +1,7 @@
 from fire import Fire
 import os
 import ir_datasets as irds
-from lexdistill import T5StandardLoader, Baseline
+from lexdistill import T5StandardLoader, BaselineT5
 from transformers import AdamW, get_linear_schedule_with_warmup
 import logging
 import wandb
@@ -37,7 +37,7 @@ def main(
     corpus = irds.load(dataset_name)
 
     logging.info('loading model...')
-    model = Baseline.init()
+    model = BaselineT5.init()
 
     logging.info('loading loader...')
     loader = T5StandardLoader(triples_file, corpus, model.tokenizer, batch_size=batch_size, shuffle=shuffle)
