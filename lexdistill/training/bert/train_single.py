@@ -59,11 +59,12 @@ def main(
             x, y = loader.get_batch(i)
             x = x.to(model.device)
             y = y.to(model.device)
-            logging.info('forward pass...')
             pred = model.forward(x)
 
             loss = MarginMSELoss(pred, y) / grad_accum
             loss.backward()
+
+            logging.info(i+1 % grad_accum)
 
             if i + 1 % grad_accum == 0 or i == total_steps // batch_size - 1:
                 logging.info(f'optimizing...')
