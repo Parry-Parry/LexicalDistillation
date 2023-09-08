@@ -59,7 +59,7 @@ def main(
             y = y.to(model.device)
             pred = model.forward(x)
 
-            loss = MarginMSELoss(pred, y)
+            loss = MarginMSELoss(pred, y) / grad_accum
             loss.backward()
 
             if (int(i + 1) % grad_accum == 0) or (int(i) == int(total_steps // batch_size - 1)):

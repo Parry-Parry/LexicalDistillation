@@ -56,7 +56,7 @@ def main(
             x = x.to(model.device)
             pred = model.forward(x)
 
-            loss = pred.loss
+            loss = pred.loss / grad_accum
             loss.backward()
 
             if (int(i + 1) % grad_accum == 0) or (int(i) == int(total_steps // batch_size - 1)):
