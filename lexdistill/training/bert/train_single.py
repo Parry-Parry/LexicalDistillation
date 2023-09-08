@@ -53,7 +53,7 @@ def main(
     loader.setup()
     model.train()
 
-    with _logger.pbar_raw(desc='training...', total=total_steps // batch_size) as pbar:
+    with _logger.pbar_raw(desc='training...', total=total_steps) as pbar:
         total_loss = 0.
         for i in range(total_steps // batch_size):
             x, y = loader.get_batch(i)
@@ -64,9 +64,7 @@ def main(
             loss = MarginMSELoss(pred, y) / grad_accum
             loss.backward()
 
-            print(i + 1 % grad_accum == 0)
-
-            if (i + 1 % grad_accum == 0) or (i == total_steps // batch_size - 1):
+            if (int(i + 1) % grad_accum == 0) or (int(i) == int(total_steps // batch_size - 1)):
                 logging.info(f'optimizing...')
                 opt.step()
                 opt.zero_grad()
@@ -78,7 +76,7 @@ def main(
 
             total_loss += loss.item()
 
-            pbar.update(1)
+            pbar.update(batch_size)
             pbar.set_postfix({'loss': total_loss/(i+1)})
 
     model.save_pretrained(os.path.join(out_dir, 'model'))
