@@ -55,14 +55,14 @@ def main(
         total_loss = 0.
         for i in range(total_steps // batch_size):
             x, y = loader.get_batch(i)
-            x.to(model.device)
-            y.to(model.device)
+            x = x.to(model.device)
+            y = y.to(model.device)
             pred, ce = model.forward(x)
 
             loss = MarginMSELoss(pred, y) + ce
             loss.backward()
 
-            if i + 1 % grad_accum == 0 or i == total_steps // batch_size - 1:
+            if (int(i + 1) % grad_accum == 0) or (int(i) == int(total_steps // batch_size - 1)):
                 opt.step()
                 opt.zero_grad()
                 sched.step()
