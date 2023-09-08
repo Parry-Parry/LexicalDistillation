@@ -58,10 +58,11 @@ def main(
             x = x.to(model.device)
             pred = model.forward(x)
 
-            loss = pred.loss
+            loss = pred.loss / grad_accum
             loss.backward()
 
             if i + 1 % grad_accum == 0 or i == total_steps // batch_size - 1:
+
                 opt.step()
                 opt.zero_grad()
                 sched.step()
