@@ -132,7 +132,7 @@ class MonoBERTModel(nn.Module):
     def forward(self, x):
         x['labels'] = self.gen_labels(x['input_ids'])
         logits = self.model(**x).logits
-        return logits[:, 1]
+        return F.softmax(logits, dim=1)[:, 1]
 
 class BaselineBERT(nn.Module):
     def __init__(self, model, tokenizer):
@@ -192,7 +192,7 @@ class DualBERTModel(nn.Module):
         x['labels'] = self.gen_labels(x['input_ids'])
         output = self.model(**x)
         logits = output.logits
-        result = logits[:, 1]
+        result = F.softmax(logits, dim=1)[:, 1]
         return result, output.loss
         
 
