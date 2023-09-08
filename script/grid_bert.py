@@ -4,23 +4,23 @@ import logging
 from os.path import join
 
 ARGS = {
-    'bm25.one_sided.teacher' : {
+    'bm25.bert.one_sided.teacher' : {
         'script' : 'lexdistill.training.bert.train_single',
         'mode' : 'one_sided'
     },
-    'bm25.perfect_one_sided.teacher' : {
+    'bm25.bert.perfect_one_sided.teacher' : {
         'script' : 'lexdistill.training.bert.train_single',
         'mode' : 'perfect_one_sided'
     },
-    'bm25.perfect.teacher' : {
+    'bm25.bert.perfect.teacher' : {
         'script' : 'lexdistill.training.bert.train_single',
         'mode' : 'perfect'
     },
-    'bm25.teacher' : {
+    'bm25.bert.teacher' : {
         'script' : 'lexdistill.training.bert.train_single',
         'mode' : 'std'
     },
-    'perfect' : {
+    'perfect.bert' : {
         'script' : 'lexdistill.training.bert.train_perfect',
         'mode' : None
     }
