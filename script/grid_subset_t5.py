@@ -8,10 +8,6 @@ ARGS = {
         'script' : 'lexdistill.training.t5.train_single',
         'mode' : 'one_sided'
     },
-    'bm25.perfect_one_sided.teacher' : {
-        'script' : 'lexdistill.training.t5.train_single',
-        'mode' : 'perfect_one_sided'
-    },
     'bm25.perfect.teacher' : {
         'script' : 'lexdistill.training.t5.train_single',
         'mode' : 'perfect'
