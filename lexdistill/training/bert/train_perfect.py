@@ -61,7 +61,7 @@ def main(
             loss = MarginMSELoss(pred, y) / grad_accum
             loss.backward()
 
-            if i + 1 % grad_accum == 0 or i == total_steps // batch_size - 1:
+            if (int(i + 1) % grad_accum == 0) or (int(i) == int(total_steps // batch_size - 1)):
                 opt.step()
                 opt.zero_grad()
                 sched.step()

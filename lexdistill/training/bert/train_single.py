@@ -53,7 +53,7 @@ def main(
     loader.setup()
     model.train()
 
-    with _logger.pbar_raw(desc='training...', total=total_steps) as pbar:
+    with _logger.pbar_raw(desc='training...', total=total_steps//batch_size) as pbar:
         total_loss = 0.
         for i in range(total_steps // batch_size):
             x, y = loader.get_batch(i)
@@ -75,7 +75,7 @@ def main(
 
             total_loss += loss.item()
 
-            pbar.update(batch_size)
+            pbar.update(1)
             pbar.set_postfix({'loss': total_loss/(i+1)})
 
     model.save_pretrained(os.path.join(out_dir, 'model'))
