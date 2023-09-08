@@ -16,7 +16,7 @@ def main(
         mode : str = 'std',
         total_steps : int = 100000, 
         batch_size : int = 16, 
-        lr : float = 0.001, 
+        lr : float = 0.00001, 
         grad_accum : int = 1,
         warmup_steps=0,
         shuffle=False,
