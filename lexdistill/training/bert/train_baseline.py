@@ -36,6 +36,8 @@ def main(
 
     corpus = irds.load(dataset_name)
 
+    logging.info(f'Total steps: {total_steps}, batch size: {batch_size}, grad accum: {grad_accum}, warmup steps: {warmup_steps}')
+
     logging.info('loading model...')
     model = BaselineBERT.init()
 
