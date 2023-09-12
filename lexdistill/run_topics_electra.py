@@ -20,12 +20,12 @@ def main(model_dir : str, out : str, eval_name : str, baseline : str = None, mod
         for _, store in enumerate(dirs):
             if os.path.exists(join(out, f"{store}_results.csv")):
                 continue
-            _model = bm25 >> pt.text.get_text(dataset, "text") >> ElectraScorer(model=join(model_dir, store, 'model'))
+            _model = bm25 >> pt.text.get_text(dataset, "text") >> ElectraScorer(model_name=join(model_dir, store, 'model'))
             res = _model.transform(eval.get_topics())
             pt.io.write_results(res, join(out, f"{store}_run.gz"))
             del _model
     else:
-        _model = bm25 >> pt.text.get_text(dataset, "text") >> ElectraScorer(model=join(model_dir, model, 'model'))
+        _model = bm25 >> pt.text.get_text(dataset, "text") >> ElectraScorer(model_name=join(model_dir, model, 'model'))
         res = _model.transform(eval.get_topics())
         pt.io.write_results(res, join(out, f"{model}_run.gz"))
     return "Success!"
