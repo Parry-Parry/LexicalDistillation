@@ -5,11 +5,12 @@ import os
 from os.path import join
 from pyterrier_t5 import MonoT5ReRanker
 
-def main(model_dir : str, out : str, eval_name : str, baseline : str, model : str = None):  
+def main(model_dir : str, out : str, eval_name : str, baseline : str = None, model : str = None):  
     dataset = pt.get_dataset("irds:msmarco-passage/train/triples-small")
     bm25 = pt.BatchRetrieve(pt.get_dataset("msmarco_passage").get_index("terrier_stemmed_text"), wmodel="BM25")
     eval = pt.get_dataset(eval_name)
-    baseline = bm25 >> pt.text.get_text(dataset, "text") >> MonoT5ReRanker(model=join(baseline, 'model'))
+    if baseline: baseline = bm25 >> pt.text.get_text(dataset, "text") >> MonoT5ReRanker(model=join(baseline, 'model'))
+    else: baseline = bm25 >> pt.text.get_text(dataset, "text") >> MonoT5ReRanker()
     os.makedirs(out, exist_ok=True)
     if not os.path.exists(join(out, "baseline_run.gz")):
         res = baseline.transform(eval.get_topics())
