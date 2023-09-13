@@ -45,6 +45,7 @@ def main(
     loader = T5SingleTeacherLoader(teacher_file, triples_file, corpus, model.tokenizer, mode=mode, batch_size=batch_size, shuffle=shuffle)
 
     opt = AdamW(model.parameters(), lr=lr)
+    logging.info(type(warmup_steps), type(batch_size), type(grad_accum), type(total_steps))
     sched = get_linear_schedule_with_warmup(opt, num_warmup_steps=warmup_steps//(batch_size*grad_accum), num_training_steps=total_steps//(batch_size*grad_accum))
 
     logging.info('init loader...')
