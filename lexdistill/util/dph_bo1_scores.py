@@ -29,7 +29,7 @@ def main(triples_path : str,
 
     pt_index = pt.get_dataset("msmarco_passage").get_index("terrier_stemmed")
     pt_index = pt.IndexFactory.of(pt_index, memory=True)
-    dph_scorer = pt.text.scorer(body_attr="text", wmodel="DPH", controls={'bo1' : 'on'}, background_index=pt_index)
+    dph_scorer = pt.text.scorer(body_attr="text", wmodel="DPH", controls={'qe' : "on", 'qemodel' : 'bo1'}, background_index=pt_index)
     dph = pt.apply.generic(lambda x : get_query_text(x)) >> pt.BatchRetrieve(pt_index, wmodel="DPH", controls={'bo1' : 'on'}) % 1000
 
     def pivot_batch(batch):

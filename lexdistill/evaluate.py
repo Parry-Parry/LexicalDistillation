@@ -6,7 +6,6 @@ from ir_measures import *
 import ir_datasets as irds
 import pandas as pd
 
-
 def main(eval :str, run_dir : str, out_dir : str):
     os.makedirs(out_dir, exist_ok=True)
     files = [f for f in os.listdir(run_dir) if os.path.isfile(join(run_dir, f))]

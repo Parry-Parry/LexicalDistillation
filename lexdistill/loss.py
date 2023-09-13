@@ -1,7 +1,10 @@
 import torch
 import torch.nn.functional as F
-
+import numpy as np
 margin = lambda x : x[::2] - x[1::2]
+
+def aggregate(x):
+    return [np.mean(x)]
 
 def MarginMSELoss(x, y):
     student_margin = margin(x)

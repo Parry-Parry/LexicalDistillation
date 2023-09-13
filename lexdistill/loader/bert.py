@@ -16,13 +16,16 @@ class BERTTeacherLoader:
                  mode = 'std',
                  batch_size : int = 16,
                  shuffle : bool = False,
-                 tokenizer_kwargs : dict = None) -> None:
+                 tokenizer_kwargs : dict = None,
+                 aggr_func : callable = lambda x : x) -> None:
         self.teacher_dir = teacher_dir
         self.triples_file = triples_file
         self.tokenizer = tokenizer
         self.corpus = corpus
 
         if tokenizer_kwargs is not None: self.tokenizer_kwargs.update(tokenizer_kwargs)
+
+        self.aggr_func = aggr_func
 
         self.batch_size = batch_size
         self.shuffle = shuffle
@@ -57,7 +60,7 @@ class BERTTeacherLoader:
                 score = 0. if neg else 1.
             sample.append(score)
 
-        return sample
+        return self.aggr_func(sample)
     
     def get_teacher_scores_one_sided(self, qid, doc_id, neg=False) -> torch.Tensor:
         sample = []
@@ -71,32 +74,36 @@ class BERTTeacherLoader:
                 score = 0.
             sample.append(score)
 
-        return sample
+        return self.aggr_func(sample)
     
     def get_teacher_scores_perfect(self, qid, doc_id, neg=False) -> torch.Tensor:
         sample = []
         for _, _teacher in self.teacher.items():
             try:
-                score = [_teacher[str(qid)][str(doc_id)], 0. if neg else 1.]
+                score = _teacher[str(qid)][str(doc_id)]
             except KeyError:
-                score = [0., 0.] if neg else [1., 1.]
+                score = 0. if neg else 1.
             sample.append(score)
+        
+        sample.append(0. if neg else 1.)
 
-        return sample
+        return self.aggr_func(sample)
     
     def get_teacher_scores_perfect_one_sided(self, qid, doc_id, neg=False) -> torch.Tensor:
         sample = []
         for _, _teacher in self.teacher.items():
             if neg == False: 
-                sample.append([1., 1.])
+                sample.append(1.)
                 continue
             try:
-                score = [_teacher[str(qid)][str(doc_id)], 0.]
+                score = [_teacher[str(qid)][str(doc_id)]]
             except KeyError:
-                score = [0., 0.] 
+                score = 0.
             sample.append(score)
+        
+        sample.append(0. if neg else 1.)
 
-        return sample
+        return self.aggr_func(sample)
 
     def format(self, q, d):
         return 'Query: ' + q + ' Document: ' + d + ' Relevant:'
@@ -148,6 +155,8 @@ class BERTSingleTeacherLoader:
             self.get_teacher_scores = self.get_teacher_scores_std
         elif mode == 'one_sided':
             self.get_teacher_scores = self.get_teacher_scores_one_sided
+        elif mode == 'reversed':
+            self.get_teacher_scores = self.get_teacher_scores_reversed
         elif mode == 'perfect':
             self.get_teacher_scores = self.get_teacher_scores_perfect
         elif mode == 'perfect_one_sided':
@@ -177,6 +186,15 @@ class BERTSingleTeacherLoader:
             score = self.teacher[str(qid)][str(doc_id)]
         except KeyError:
             score = 0. 
+
+        return [score]
+
+    def get_teacher_scores_reversed(self, qid, doc_id, neg=False) -> torch.Tensor:
+        if neg == True: return [0.]
+        try:
+            score = self.teacher[str(qid)][str(doc_id)]
+        except KeyError:
+            score = 1. 
 
         return [score]
 
