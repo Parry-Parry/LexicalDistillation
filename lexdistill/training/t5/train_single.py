@@ -17,7 +17,7 @@ def main(
         batch_size : int = 16, 
         lr : float = 0.001, 
         grad_accum : int = 1,
-        warmup_steps=0,
+        warmup_steps : int =0,
         shuffle=False,
         wandb_project=None,
         mode='std',):
