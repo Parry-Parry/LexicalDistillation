@@ -10,7 +10,7 @@ def main(score_path : str):
     new = defaultdict(lambda : defaultdict(lambda : 0.))
     for k, v in scores.items():
         for _k, _v in v.items():
-            new[k][_k] = float(_v) if not np.isnan(_v) else 0.
+            new[k][_k] = float(_v) if not np.isnan(float(_v)) else 0.
     
     with open(score_path, 'w') as f:
         json.dump(new, f)
