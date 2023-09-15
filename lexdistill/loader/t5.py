@@ -124,7 +124,7 @@ class T5TeacherLoader:
             x, y = self[i]
             xs.extend(x)
             ys.extend(y)
-        return self.tokenize(xs), torch.tensor(ys)
+        return self.tokenize(xs), torch.tensor(ys, dtype=torch.float32)
 
 class T5SingleTeacherLoader:
     teacher = None 
