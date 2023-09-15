@@ -4,9 +4,9 @@ import torch.nn.functional as F
 from transformers import T5ForConditionalGeneration, T5Tokenizer, ElectraForSequenceClassification, AutoTokenizer
 
 class MonoT5Model(nn.Module):
-    def __init__(self, model, tokenizer):
+    def __init__(self, model, tokenizer, rank=None):
         super().__init__()
-        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        self.device = rank if rank else torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         self.model = model.to(self.device)
         self.tokenizer = tokenizer
 
@@ -14,11 +14,10 @@ class MonoT5Model(nn.Module):
         self.nrel = self.tokenizer.encode('false')[0]
     
     @staticmethod
-    def init():
+    def init(rank=None):
         model = T5ForConditionalGeneration.from_pretrained('t5-base')
         tokenizer = T5Tokenizer.from_pretrained('t5-base')
-        return MonoT5Model(model, tokenizer)
-
+        return MonoT5Model(model, tokenizer, rank)
     def save_pretrained(self, path):
         self.model.save_pretrained(path)
     
@@ -38,9 +37,9 @@ class MonoT5Model(nn.Module):
         return F.log_softmax(result, dim=1)[:, 0]
 
 class BaselineT5(nn.Module):
-    def __init__(self, model, tokenizer):
+    def __init__(self, model, tokenizer, rank=None):
         super().__init__()
-        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        self.device = rank if rank else torch.device('cuda' if torch.cuda.is_available() else 'cpu')        
         self.model = model.to(self.device)
         self.tokenizer = tokenizer
 
@@ -48,10 +47,10 @@ class BaselineT5(nn.Module):
         self.nrel = self.tokenizer.encode('false')[0]
     
     @staticmethod
-    def init():
+    def init(rank=None):
         model = T5ForConditionalGeneration.from_pretrained('t5-base')
         tokenizer = T5Tokenizer.from_pretrained('t5-base')
-        return BaselineT5(model, tokenizer)
+        return BaselineT5(model, tokenizer, rank)
 
     def save_pretrained(self, path):
         self.model.save_pretrained(path)
@@ -70,9 +69,9 @@ class BaselineT5(nn.Module):
         return self.model(**x)
 
 class DualMonoT5Model(nn.Module):
-    def __init__(self, model, tokenizer):
+    def __init__(self, model, tokenizer, rank=None):
         super().__init__()
-        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        self.device = rank if rank else torch.device('cuda' if torch.cuda.is_available() else 'cpu')        
         self.model = model.to(self.device)
         self.tokenizer = tokenizer
 
@@ -80,10 +79,10 @@ class DualMonoT5Model(nn.Module):
         self.nrel = self.tokenizer.encode('false')[0]
     
     @staticmethod
-    def init():
+    def init(rank=None):
         model = T5ForConditionalGeneration.from_pretrained('t5-base')
         tokenizer = T5Tokenizer.from_pretrained('t5-base')
-        return DualMonoT5Model(model, tokenizer)
+        return DualMonoT5Model(model, tokenizer, rank)
 
     def save_pretrained(self, path):
         self.model.save_pretrained(path)
@@ -105,17 +104,17 @@ class DualMonoT5Model(nn.Module):
         return F.log_softmax(result, dim=1)[:, 0], output.loss
 
 class MonoBERTModel(nn.Module):
-    def __init__(self, model, tokenizer):
+    def __init__(self, model, tokenizer, rank=None):
         super().__init__()
-        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        self.device = rank if rank else torch.device('cuda' if torch.cuda.is_available() else 'cpu')        
         self.model = model.to(self.device)
         self.tokenizer = tokenizer
     
     @staticmethod
-    def init():
+    def init(rank=None):
         model = ElectraForSequenceClassification.from_pretrained('google/electra-base-discriminator', num_labels=2)
         tokenizer = AutoTokenizer.from_pretrained('google/electra-base-discriminator')
-        return MonoBERTModel(model, tokenizer)
+        return MonoBERTModel(model, tokenizer, rank)
 
     def save_pretrained(self, path):
         self.model.save_pretrained(path)
@@ -135,17 +134,17 @@ class MonoBERTModel(nn.Module):
         return F.softmax(logits, dim=1)[:, 1]
 
 class BaselineBERT(nn.Module):
-    def __init__(self, model, tokenizer):
+    def __init__(self, model, tokenizer, rank=None):
         super().__init__()
-        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        self.device = rank if rank else torch.device('cuda' if torch.cuda.is_available() else 'cpu')        
         self.model = model.to(self.device)
         self.tokenizer = tokenizer
     
     @staticmethod
-    def init():
+    def init(rank=None):
         model = ElectraForSequenceClassification.from_pretrained('google/electra-base-discriminator', num_labels=2)
         tokenizer = AutoTokenizer.from_pretrained('google/electra-base-discriminator')
-        return BaselineBERT(model, tokenizer)
+        return BaselineBERT(model, tokenizer, rank)
 
     def save_pretrained(self, path):
         self.model.save_pretrained(path)
@@ -164,17 +163,17 @@ class BaselineBERT(nn.Module):
         return self.model(**x)
 
 class DualBERTModel(nn.Module):
-    def __init__(self, model, tokenizer):
+    def __init__(self, model, tokenizer, rank=None):
         super().__init__()
-        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        self.device = rank if rank else torch.device('cuda' if torch.cuda.is_available() else 'cpu')        
         self.model = model.to(self.device)
         self.tokenizer = tokenizer
     
     @staticmethod
-    def init():
+    def init(rank=None):
         model = ElectraForSequenceClassification.from_pretrained('google/electra-base-discriminator', num_labels=2)
         tokenizer = AutoTokenizer.from_pretrained('google/electra-base-discriminator')
-        return DualBERTModel(model, tokenizer)
+        return DualBERTModel(model, tokenizer, rank)
 
     def save_pretrained(self, path):
         self.model.save_pretrained(path)

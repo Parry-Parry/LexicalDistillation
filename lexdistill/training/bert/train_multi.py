@@ -5,6 +5,7 @@ from lexdistill import BERTTeacherLoader, MarginMSELoss, MonoBERTModel
 from transformers import AdamW, get_linear_schedule_with_warmup
 import logging
 import wandb
+import numpy as np
 
 _logger = irds.log.easy()
 
@@ -20,7 +21,8 @@ def main(
         grad_accum : int = 1,
         warmup_steps=0,
         shuffle=False,
-        wandb_project=None,):
+        wandb_project=None,
+        aggr='mean'):
 
     os.makedirs(out_dir, exist_ok=True)
 
@@ -35,6 +37,11 @@ def main(
                 'warmup_steps': warmup_steps,
                 'mode': mode,
             })
+        
+    if aggr == 'mean':
+        aggr = lambda x : [np.mean(x)]
+    else:
+        aggr = lambda x : x
 
     corpus = irds.load(dataset_name)
 
@@ -44,7 +51,7 @@ def main(
     model = MonoBERTModel.init()
 
     logging.info(f'loading loader with mode {mode}...')
-    loader = BERTTeacherLoader(teacher_file, triples_file, corpus, model.tokenizer, mode=mode, batch_size=batch_size, shuffle=shuffle)
+    loader = BERTTeacherLoader(teacher_file, triples_file, corpus, model.tokenizer, mode=mode, batch_size=batch_size, shuffle=shuffle, aggr_func=aggr)
 
     opt = AdamW(model.parameters(), lr=lr)
     sched = get_linear_schedule_with_warmup(opt, num_warmup_steps=warmup_steps//(batch_size*grad_accum), num_training_steps=total_steps//(batch_size*grad_accum))
