@@ -22,7 +22,7 @@ def main(
         warmup_steps=0,
         shuffle=False,
         wandb_project=None,
-        aggr='mean'
+        aggr='mean',
         rank=None):
 
     os.makedirs(out_dir, exist_ok=True)
@@ -48,7 +48,7 @@ def main(
     corpus = irds.load(dataset_name)
 
     logging.info('loading model...')
-    model = MonoT5Model.init()
+    model = MonoT5Model.init(rank=rank)
 
     logging.info(f'loading loader with mode {mode}...')
     loader = T5TeacherLoader(teacher_file, triples_file, corpus, model.tokenizer, mode=mode, batch_size=batch_size, shuffle=shuffle, aggr_func=aggr)
