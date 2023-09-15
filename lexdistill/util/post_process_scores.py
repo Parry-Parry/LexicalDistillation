@@ -14,3 +14,6 @@ def main(score_path : str):
     
     with open(score_path, 'w') as f:
         json.dump(new, f)
+
+if __name__ == "__main__":
+    Fire(main)
