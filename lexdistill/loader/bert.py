@@ -25,11 +25,11 @@ class BERTTeacherLoader:
 
         if tokenizer_kwargs is not None: self.tokenizer_kwargs.update(tokenizer_kwargs)
 
-        self.aggr_func = aggr_func
-
         self.batch_size = batch_size
         self.shuffle = shuffle
         self.initialized = False
+
+        self.aggr_func = aggr_func
 
         if mode == 'std': 
             self.get_teacher_scores = self.get_teacher_scores_std
@@ -96,7 +96,7 @@ class BERTTeacherLoader:
                 sample.append(1.)
                 continue
             try:
-                score = [_teacher[str(qid)][str(doc_id)]]
+                score = _teacher[str(qid)][str(doc_id)]
             except KeyError:
                 score = 0.
             sample.append(score)
