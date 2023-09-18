@@ -25,7 +25,7 @@ ARGS = {
 AGGR = ['mean', 'none']
 
 BATCH_SIZE = 16
-WARMUP_STEPS = 2500
+WARMUP_STEPS = 10000
 
 def main(model_dir : str, 
          triples_file : str, 
