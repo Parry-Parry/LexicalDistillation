@@ -125,7 +125,7 @@ class BERTTeacherLoader:
             q.extend(_q)
             d.extend(_d)
             ys.extend(y)
-        return self.tokenize(q, d), torch.tensor(ys)
+        return self.tokenize(q, d), torch.tensor(ys, dtype=torch.float32)
 
 class BERTSingleTeacherLoader:
     teacher = None 
