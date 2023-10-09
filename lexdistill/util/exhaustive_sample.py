@@ -36,6 +36,12 @@ def convert_to_dict(result):
             lookup[str(row.qid)][str(row.docno)] = float(row.score)
         return lookup
 
+def sample_neg(neg_pool, num_negs):
+    if len(neg_pool) < num_negs:
+        return neg_pool.sample(n=num_negs, replace=True)
+    else:
+        return neg_pool.sample(n=num_negs)
+
 clean = lambda x : re.sub(r"[^a-zA-Z0-9¿]+", " ", x)
 
 def main(lookup_path : str, triples_path : str, subset : int = 100000, num_negs : int = 32, batch_size : int = 1000):
@@ -97,7 +103,7 @@ def main(lookup_path : str, triples_path : str, subset : int = 100000, num_negs 
             neg_pool = neg_pool[~neg_pool.set_index(['qid', 'docno']).index.isin(new.set_index(['qid', 'docno']).index)].reset_index(drop=True)
             logging.info('sampling...')
             # randomly sample num_neg docs res groupby qid
-            negs = neg_pool.groupby('qid').apply(lambda x : x.sample(n=num_negs)).reset_index(drop=True)[['qid', 'docno']]
+            negs = neg_pool.groupby('qid').apply(lambda x : sample_neg(x, num_negs)).reset_index(drop=True)[['qid', 'docno']]
             new = pd.concat([new, negs])
             # create dict of qid to list of docids in negs
             negs = negs.groupby('qid')['docno'].apply(list).to_dict()
