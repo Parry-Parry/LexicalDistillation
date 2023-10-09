@@ -75,7 +75,7 @@ def main(triples_path : str,
     for subset in tqdm(split_df(triples, ceil(len(triples) / batch_size)), desc="Total Batched Iter"):
         new = subset.copy()
         new = pivot_batch(new)
-        new_triple = new['qid', 'docno'].copy()
+        new_triple = new[['qid', 'docno']].copy()
         res : pd.DataFrame = score(subset, norm=True)
 
         # remove all qid, docid combos from neg_pool which are in res
