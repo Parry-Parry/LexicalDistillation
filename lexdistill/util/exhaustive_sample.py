@@ -64,12 +64,10 @@ def main(lookup_path : str, triples_path : str, subset : int = 100000, num_negs 
         new, _ = pivot_batch(batch.copy())
         topics = new['qid'].drop_duplicates()
         # score with bm25 over all topics and if any (qid docno) pair from new is missing, rsecore missing records with bm25 scorer 
-        logging.info('initial scoring...')
         res = bm25.transform(topics)[['qid', 'docno', 'score']]
 
         new['query'] = new['qid'].apply(lambda qid : clean(queries[str(qid)]))
         new['text'] = new['docno'].apply(lambda qid : clean(docs[str(qid)]))
-        logging.info('rescoring...')
         batch_score = bm25_scorer.transform(new)[['qid', 'docno', 'score']]
         res = pd.concat([res, batch_score]).drop_duplicates(['qid', 'docno']).reset_index(drop=True)
 
@@ -85,13 +83,10 @@ def main(lookup_path : str, triples_path : str, subset : int = 100000, num_negs 
     new_set = []
 
     while to_retrieve > 0: 
-        logging.info(f"Retrieving {to_retrieve} more triples")
         sub = train.sample(n=to_retrieve).rename(columns={'doc_id_b': 'doc_id_b_0',})
-        logging.info('batching...')
         for _sub in tqdm(split_df(sub, ceil(len(sub) / batch_size)), desc="Total Batched Iter"):
             _triples = _sub.copy()
             new, pos_list = pivot_batch(_triples)
-            logging.info('scoring...')
             res : pd.DataFrame = score(_sub, norm=True)
 
             # filter res by qids that have more than num_neg results 
@@ -101,7 +96,6 @@ def main(lookup_path : str, triples_path : str, subset : int = 100000, num_negs 
             to_retrieve -= len(_triples)
             neg_pool = res.copy()
             neg_pool = neg_pool[~neg_pool.set_index(['qid', 'docno']).index.isin(new.set_index(['qid', 'docno']).index)].reset_index(drop=True)
-            logging.info('sampling...')
             # randomly sample num_neg docs res groupby qid
             negs = neg_pool.groupby('qid').apply(lambda x : sample_neg(x, num_negs)).reset_index(drop=True)[['qid', 'docno']]
             new = pd.concat([new, negs])
@@ -118,7 +112,6 @@ def main(lookup_path : str, triples_path : str, subset : int = 100000, num_negs 
                 except KeyError:
                     if (str(x.qid), str(x.docno)) in pos_list: return 1.
                     return 0.
-            logging.info('updating...')
             new['score'] = new.apply(lambda x : lookup(x), axis=1)
             main_lookup.update(convert_to_dict(new))
             new_set.append(_triples[['qid', 'doc_id_a', 'doc_id_b']])
