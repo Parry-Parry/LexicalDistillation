@@ -41,7 +41,7 @@ def main(triples_path : str,
     pt_index = pt.IndexFactory.of(pt_index, memory=True)
     bm25_scorer = pt.text.scorer(body_attr="text", wmodel="BM25", background_index=pt_index)
     index = PisaIndex.from_dataset("msmarco_passage", threads=8)
-    bm25 = pt.apply.generic(lambda x : get_query_text(x)) >> index.bm25(num_results=1000) >> pt.text.get_text(pt.get_dataset('irds:msmarco-passage/train/triples-small'), 'text')
+    bm25 = pt.apply.generic(lambda x : get_query_text(x)) >> index.bm25(k1=1.2, b=0.75, num_results=1000) >> pt.text.get_text(pt.get_dataset('irds:msmarco-passage/train/triples-small'), 'text')
 
     def pivot_batch(batch):
         records = []
@@ -88,12 +88,12 @@ def main(triples_path : str,
 
         # remove all qid, docid combos from neg_pool which are in res
         neg_pool = res.copy()
-        neg_pool = neg_pool[neg_pool['docno'].isin(new['docno']) == False]
-
+        neg_pool = neg_pool.groupby('qid').filter(lambda x : x.docno not in new[x.qid].docno)
+        
         # randomly sample num_neg docs res groupby qid
         negs = neg_pool.groupby('qid').apply(lambda x : sample_negs(x, num_negs)).reset_index(drop=True)[['qid', 'docno']]
         new = pd.concat([new, negs])
-        
+        logging.info(new.head())
         # create dict of qid to list of docids in negs
         negs = negs.groupby('qid')['docno'].apply(list).to_dict()
 
