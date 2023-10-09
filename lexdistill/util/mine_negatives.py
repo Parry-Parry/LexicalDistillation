@@ -45,14 +45,13 @@ def main(triples_path : str,
 
     def pivot_batch(batch):
         records = []
-        pos_list = []
+        pos_list = batch.apply(lambda x : (str(x.qid), str(x.doc_id_a)), axis=1).tolist()
         for row in batch.itertuples():
             records.extend([{
                 'qid': str(row.qid),
                 'docno': str(row.doc_id_a),
                 },
                 ])
-            pos_list.extend([(str(row.qid), str(row.doc_id_a))])
         return pd.DataFrame.from_records(records), pos_list
 
     def convert_to_dict(result):
