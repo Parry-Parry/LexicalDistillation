@@ -88,7 +88,7 @@ def main(triples_path : str,
 
         # remove all qid, docid combos from neg_pool which are in res
         neg_pool = res.copy()
-        neg_pool = neg_pool.groupby('qid').filter(lambda x : x.docno not in new[x.qid].docno)
+        neg_pool = neg_pool[~neg_pool.set_index(['qid', 'docno']).index.isin(new.set_index(['qid', 'docno']).index)].reset_index(drop=True)
         
         # randomly sample num_neg docs res groupby qid
         negs = neg_pool.groupby('qid').apply(lambda x : sample_negs(x, num_negs)).reset_index(drop=True)[['qid', 'docno']]
