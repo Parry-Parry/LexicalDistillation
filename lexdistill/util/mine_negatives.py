@@ -64,13 +64,13 @@ def main(triples_path : str,
         new = pivot_batch(batch.copy())
         topics = new['qid'].drop_duplicates()
         # score with bm25 over all topics and if any (qid docno) pair from new is missing, rsecore missing records with bm25 scorer 
-        rez = bm25.transform(topics)
+        rez = bm25.transform(topics)[['qid', 'docno', 'score']]
 
         new['query'] = new['qid'].apply(lambda qid : clean(queries[str(qid)]))
         new['text'] = new['docno'].apply(lambda qid : clean(docs[str(qid)]))
         
-        batch_score = bm25_scorer.transform(new)
-        rez = rez.append(batch_score).drop_duplicates(['qid', 'docno']).reset_index(drop=True)
+        batch_score = bm25_scorer.transform(new)[['qid', 'docno', 'score']]
+        rez = pd.concat([rez, batch_score]).drop_duplicates(['qid', 'docno']).reset_index(drop=True)
 
         if norm:
             # minmax norm over each query score set 
