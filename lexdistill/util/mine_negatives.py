@@ -92,13 +92,14 @@ def main(triples_path : str,
         # randomly sample num_neg docs res groupby qid
         negs = neg_pool.groupby('qid').apply(lambda x : sample_negs(x, num_negs)).reset_index(drop=True)
         new = new.append(negs)
+        logging.info(negs.head(5))
         # create dict of qid to list of docids in negs
         negs = negs.groupby('qid')['docno'].apply(list).to_dict()
-        print(negs)
 
         new_triple['doc_id_b'] = new_triple['qid'].apply(lambda x : negs[str(x)])
 
         results_lookup = convert_to_dict(res)
+        logging.info(new.head(5))
         new['score'] = new.apply(lambda x : results_lookup[str(x.qid)][str(x.docno)], axis=1)
         main_lookup.update(convert_to_dict(new))
         new_triples.append(new_triple[['qid', 'docno', 'doc_id_b']].rename(columns={'doc_id': 'doc_id_a'}))
