@@ -2,7 +2,7 @@ import pandas as pd
 import json
 import torch
 import os
-from typing import Any
+from typing import Any, List
 
 class BERTLCETeacherLoader:
     teacher = None 
@@ -44,7 +44,7 @@ class BERTLCETeacherLoader:
     def setup(self) -> None:
         with open(self.teacher_file, 'r') as f:
             self.teacher = json.load(f)
-        self.triples = pd.read_csv(self.triples_file, sep='\t', dtype={'qid':str, 'doc_id_a':str, 'doc_id_b':str}, index_col=False)
+        self.triples = pd.read_csv(self.triples_file, sep='\t', dtype={'qid':str, 'doc_id_a':str, 'doc_id_b': List[str]}, index_col=False)
         if self.shuffle: self.triples = self.triples.sample(frac=1).reset_index(drop=True)
         self.docs = pd.DataFrame(self.corpus.docs_iter()).set_index("doc_id")["text"].to_dict()
         self.queries = pd.DataFrame(self.corpus.queries_iter()).set_index("query_id")["text"].to_dict()
@@ -56,7 +56,6 @@ class BERTLCETeacherLoader:
             score = self.teacher[str(qid)][str(doc_id)]
         except KeyError:
             score = 0. if neg else 1.
-
         return [score]
 
     def get_teacher_scores_one_sided(self, qid, doc_id, neg=False) -> torch.Tensor: 

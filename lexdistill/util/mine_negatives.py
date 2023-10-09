@@ -16,6 +16,13 @@ import os
 
 clean = lambda x : re.sub(r"[^a-zA-Z0-9¿]+", " ", x)
 
+def sample_negs(x, num_negs):
+    if len(x) < num_negs:
+        return x.sample(n=num_negs, replace=True)
+    else:
+        return x.sample(n=num_negs)
+    
+
 def main(triples_path : str,
          out_path : str,
          batch_size : int = 1000,
@@ -83,7 +90,7 @@ def main(triples_path : str,
         neg_pool = neg_pool[neg_pool['docno'].isin(new['docno']) == False]
 
         # randomly sample num_neg docs res groupby qid
-        negs = neg_pool.groupby('qid').apply(lambda x : x.sample(n=num_negs, replace=False)).reset_index(drop=True)
+        negs = neg_pool.groupby('qid').apply(lambda x : sample_negs(x, num_negs)).reset_index(drop=True)
         # convert negs to a dict of qid : list docno
         new = new.append(negs)
         negs = negs.groupby('qid')['docno'].apply(list).set_index('qid')['docno'].to_dict()
