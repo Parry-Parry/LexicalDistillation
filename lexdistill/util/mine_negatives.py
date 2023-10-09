@@ -2,126 +2,107 @@ from collections import defaultdict
 import pyterrier as pt
 if not pt.started():
     pt.init(boot_packages=["com.github.terrierteam:terrier-prf:-SNAPSHOT"])
-from pyterrier.model import add_ranks, split_df
+from pyterrier.model import split_df
 from fire import Fire
 import pandas as pd
-import numpy as np
 from tqdm import tqdm
 import logging
-import ir_datasets as irds
-import gc
+import json
 import re
-
-def convert_to_dict(result):
-    result = result.groupby('qid').apply(lambda x: dict(zip(x['docno'], zip(x['score'], x['rank'])))).to_dict()
-    return result
-
-class EnsembleScorer(pt.Transformer):
-    DEFAULT = (0, 10000)
-    def __init__(self, models, C=0) -> None:
-        super().__init__()
-        self.models = models
-        self.C = C
-    
-    def get_fusion_scores(self, target_sets, qids):
-        records = []
-        if len(target_sets) == 1:
-            target = target_sets[0]
-            for qid in qids:
-                for doc_id, (score, rank) in target[qid].items():
-                    records.append({
-                        'qid': str(qid),
-                        'docno': str(doc_id),
-                        'score': score,
-                    })
-            return pd.DataFrame.from_records(records)
-        for qid in qids:
-            for target in target_sets:
-                if qid not in target:
-                    target[qid] = defaultdict(lambda: self.DEFAULT)
-            all_sets = [set(target[qid].keys()) for target in target_sets]
-            candidates = all_sets[0].union(*all_sets[1:])
-            for candidate in candidates:
-                for target in target_sets:
-                    if candidate not in target[qid]:
-                        target[qid][candidate] = self.DEFAULT
-                scores = [1 / (self.C + target[qid][candidate][1] + 1) for target in target_sets]
-                score = np.mean(scores)
-                records.append({
-                    'qid': str(qid),
-                    'docno': str(candidate),
-                    'score': score,
-                })   
-        return pd.DataFrame.from_records(records)
-
-    def transform(self, inp):
-        result_sets = []
-        for model in self.models:
-            result_sets.append(model.transform(inp))
-        sets = [convert_to_dict(res) for res in result_sets]
-        qids = list(inp["qid"].unique())
-
-        return add_ranks(self.get_fusion_scores(sets, qids))
+from math import ceil
+import ir_datasets as irds
+from pyterrier_pisa import PisaIndex
+import os
 
 clean = lambda x : re.sub(r"[^a-zA-Z0-9¿]+", " ", x)
 
-def main(index_path : str, dataset_name : str, out_dir : str, subset : int = 100000, budget : int = 1000, batch_size : int = 1000, num_threads : int = 8):
-    index = pt.get_dataset(index_path).get_index("terrier_stemmed")
-    index = pt.IndexFactory.of(index, memory=True)
-
-    bm25 = pt.BatchRetrieve(index, controls={"bm25.k_1": 0.45, "bm25.b": 0.55, "bm25.k_3": 0.5})
-    dph = pt.BatchRetrieve(index, wmodel="DPH")
-
-    bo1 = pt.rewrite.Bo1QueryExpansion(index)
-    kl = pt.rewrite.KLQueryExpansion(index)
-    rm3 = pt.rewrite.RM3(index)
-    '''
-    models = [  
-        (bm25 >> bo1 >> bm25 % budget).parallel(num_threads),
-        (bm25 >> kl >> bm25 % budget).parallel(num_threads),
-        (bm25 >> rm3 >> bm25 % budget).parallel(num_threads),
-        (dph >> bo1 >> dph % budget).parallel(num_threads),
-        (dph >> kl >> dph % budget).parallel(num_threads),
-    ]
-    '''
-    models = [  
-        (bm25 >> bo1 >> bm25 % budget),
-        (bm25 >> kl >> bm25 % budget),
-        (bm25 >> rm3 >> bm25 % budget),
-        (dph >> bo1 >> dph % budget),
-        (dph >> kl >> dph % budget),
-    ]
-
-    scorer = EnsembleScorer(models, C=0.0)
-
-    dataset = irds.load(dataset_name)
+def main(triples_path : str,
+         out_path : str,
+         batch_size : int = 1000,
+         num_negs : int = 32) -> str:
+    
+    triples = pd.read_csv(triples_path, sep="\t", index_col=False).rename(columns={'query_id': 'qid'})
+    dataset = irds.load("msmarco-passage/train/triples-small")
     queries = pd.DataFrame(dataset.queries_iter()).set_index('query_id')['text'].to_dict()
-    train = pd.DataFrame(dataset.docpairs_iter()).drop(['doc_id_b'], axis=1).rename(columns={'query_id': 'qid',})
-    train = train.sample(n=subset) 
+    docs = pd.DataFrame(dataset.docs_iter()).set_index('doc_id')['text'].to_dict()
 
-    train['query'] = train['qid'].apply(lambda x : clean(queries[x]))
-    del queries
-    del dataset
-    gc.collect()
+    def get_query_text(x):
+        df = pd.DataFrame({'qid' : x.values, 'query' : x.apply(lambda qid : clean(queries[str(qid)]))})
+        return df
 
-    new_set = []
+    pt_index = pt.get_dataset("msmarco_passage").get_index("terrier_stemmed")
+    pt_index = pt.IndexFactory.of(pt_index, memory=True)
+    bm25_scorer = pt.text.scorer(body_attr="text", wmodel="BM25", background_index=pt_index)
+    index = PisaIndex.from_dataset("msmarco_passage", threads=8)
+    bm25 = pt.apply.generic(lambda x : get_query_text(x)) >> index.bm25(num_results=1000) >> pt.text.get_text(pt.get_dataset('irds:msmarco-passage/train/triples-small'), 'text')
 
-    for subset in tqdm(split_df(train, batch_size), desc="Total Batched Iter"):
+    def pivot_batch(batch):
+        records = []
+        for row in batch.itertuples():
+            records.extend([{
+                'qid': str(row.qid),
+                'docno': str(row.doc_id_a),
+                },
+                ])
+        return pd.DataFrame.from_records(records)
+
+    def convert_to_dict(result):
+        lookup = defaultdict(lambda : defaultdict(lambda : 0.))
+        for row in result.itertuples():
+            lookup[str(row.qid)][str(row.docno)] = float(row.score)
+        return lookup
+    
+    def score(batch, norm=False):
+        new = pivot_batch(batch.copy())
+        topics = new['qid'].drop_duplicates()
+        # score with bm25 over all topics and if any (qid docno) pair from new is missing, rsecore missing records with bm25 scorer 
+        rez = bm25.transform(topics)
+
+        new['query'] = new['qid'].apply(lambda qid : clean(queries[str(qid)]))
+        new['text'] = new['docno'].apply(lambda qid : clean(docs[str(qid)]))
+        
+        batch_score = bm25_scorer.transform(new)
+        rez = rez.append(batch_score).drop_duplicates(['qid', 'docno']).reset_index(drop=True)
+
+        if norm:
+            # minmax norm over each query score set 
+            rez['score'] = rez.groupby('qid', group_keys=False)['score'].apply(lambda x: (x - x.min()) / (x.max() - x.min()))
+        return rez
+    
+    main_lookup = {}
+    new_triples = []
+
+    for subset in tqdm(split_df(triples, ceil(len(triples) / batch_size)), desc="Total Batched Iter"):
         new = subset.copy()
-        topics = subset[['qid', 'query']].drop_duplicates()
-        res = scorer.transform(topics).drop(['score', 'rank'], axis=1)
+        new = pivot_batch(new)
+        new_triple = new['qid', 'docno'].copy()
+        res : pd.DataFrame = score(subset, norm=True)
 
-        def get_sample(qid):
-            return res[res.qid==qid].iloc[:1000].sample(n=1)['docno'].iloc[0]
+        # remove all qid, docid combos from neg_pool which are in res
+        neg_pool = res.copy()
+        neg_pool = neg_pool[neg_pool['docno'].isin(new['docno']) == False]
 
-        new['doc_id_b'] = new.apply(lambda x : get_sample(x['qid']), axis=1)
-        new_set.append(new)
+        # randomly sample num_neg docs res groupby qid
+        negs = neg_pool.groupby('qid').apply(lambda x : x.sample(n=num_negs, replace=False)).reset_index(drop=True)
+        # convert negs to a dict of qid : list docno
+        new = new.append(negs)
+        negs = negs.groupby('qid')['docno'].apply(list).set_index('qid')['docno'].to_dict()
 
-    new_set = pd.concat(new_set)
-    new_set.to_csv(out_dir, sep='\t', index=False)
+        new_triple['doc_id_b'] = new_triple['qid'].apply(lambda x : negs[str(x)])
 
-    return "Done!"
+        results_lookup = convert_to_dict(res)
+        new['score'] = new.apply(lambda x : results_lookup[str(x.qid)][str(x.docno)], axis=1)
+        main_lookup.update(convert_to_dict(new))
+        new_triples.append(new_triple['qid', 'docno', 'doc_id_b'].rename(columns={'doc_id': 'doc_id_a'}))
 
+    with open(out_path, 'w') as f:
+        json.dump(main_lookup, f)
+    
+    new_triples = pd.concat(new_triples)
+    new_triples_path = os.path.dirname(triples_path) + '/triples_with_negs.tsv.gz'
+    new_triples.to_csv(new_triples_path, sep='\t', index=False)
+
+    return "Done!" 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
     Fire(main)
