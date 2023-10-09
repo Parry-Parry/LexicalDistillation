@@ -38,6 +38,7 @@ def convert_to_dict(result):
 
 def sample_neg(neg_pool, num_negs):
     if len(neg_pool) < num_negs:
+        logging.info(f'not enough negs, sampling with replacement {len(neg_pool)} < {num_negs}')
         return neg_pool.sample(n=num_negs, replace=True)
     else:
         return neg_pool.sample(n=num_negs)
