@@ -92,15 +92,15 @@ def main(lookup_path : str, triples_path : str, subset : int = 100000, num_negs 
 
             # filter res by qids that have more than num_neg results 
             logging.info('filtering...')
-            fails = len(neg_pool)
+            fails = len(res)
             res = res.groupby('qid').filter(lambda x : len(x) >= num_negs)
-            logging.info(f'filtered {fails - len(res)} samples')
+            logging.info(f'filtered {fails - len(res)} total samples')
             _triples = _triples[_triples['qid'].isin(res['qid'].unique())]
             to_retrieve -= len(_triples)
             neg_pool = res.copy()
             fails = len(neg_pool)
             neg_pool = neg_pool[~neg_pool[['qid', 'docno']].isin(pos_list)].reset_index(drop=True)
-            logging.info(f'filtered {fails - len(neg_pool)} samples')
+            logging.info(f'filtered {fails - len(neg_pool)} negatives')
             # randomly sample num_neg docs res groupby qid
             negs = neg_pool.groupby('qid').apply(lambda x : sample_neg(x, num_negs)).reset_index(drop=True)[['qid', 'docno']]
             new = pd.concat([new, negs])
