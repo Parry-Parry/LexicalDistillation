@@ -78,7 +78,7 @@ def main(lookup_path : str, triples_path : str, subset : int = 100000, num_negs 
         for _sub in tqdm(split_df(sub, ceil(len(sub) / batch_size)), desc="Total Batched Iter"):
             _triples = _sub.copy()
             new, pos_list = pivot_batch(_triples)
-            res : pd.DataFrame = score(subset, norm=True)
+            res : pd.DataFrame = score(_sub, norm=True)
 
             # filter res by qids that have more than num_neg results 
             res = res.groupby('qid').filter(lambda x : len(x) >= num_negs)
