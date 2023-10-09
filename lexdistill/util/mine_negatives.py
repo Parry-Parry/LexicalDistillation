@@ -91,9 +91,11 @@ def main(triples_path : str,
 
         # randomly sample num_neg docs res groupby qid
         negs = neg_pool.groupby('qid').apply(lambda x : sample_negs(x, num_negs)).reset_index(drop=True)
-        # convert negs to a dict of qid : list docno
         new = new.append(negs)
-        negs = negs.groupby('qid')['docno'].apply(list).set_index('qid')['docno'].to_dict()
+        # create dict of qid to list of docids in negs
+        negs = negs.groupby('qid')['docno'].apply(list).to_dict()
+
+
 
         new_triple['doc_id_b'] = new_triple['qid'].apply(lambda x : negs[str(x)])
 
