@@ -94,8 +94,7 @@ def main(triples_path : str,
         new = new.append(negs)
         # create dict of qid to list of docids in negs
         negs = negs.groupby('qid')['docno'].apply(list).to_dict()
-
-
+        print(negs)
 
         new_triple['doc_id_b'] = new_triple['qid'].apply(lambda x : negs[str(x)])
 
@@ -112,6 +111,7 @@ def main(triples_path : str,
     new_triples.to_csv(new_triples_path, sep='\t', index=False)
 
     return "Done!" 
+
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
     Fire(main)
