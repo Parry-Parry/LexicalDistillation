@@ -102,7 +102,7 @@ def main(triples_path : str,
         results_lookup = convert_to_dict(res)
         new['score'] = new.apply(lambda x : results_lookup[str(x.qid)][str(x.docno)], axis=1)
         main_lookup.update(convert_to_dict(new))
-        new_triples.append(new_triple['qid', 'docno', 'doc_id_b'].rename(columns={'doc_id': 'doc_id_a'}))
+        new_triples.append(new_triple[['qid', 'docno', 'doc_id_b']].rename(columns={'doc_id': 'doc_id_a'}))
 
     with open(out_path, 'w') as f:
         json.dump(main_lookup, f)
