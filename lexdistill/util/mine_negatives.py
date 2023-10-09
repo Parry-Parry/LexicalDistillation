@@ -55,7 +55,7 @@ def main(triples_path : str,
 
     def convert_to_dict(result):
         result.drop_duplicates(['qid', 'docno'], inplace=True)
-        lookup = defaultdict(lambda : defaultdict(lambda : 0.))
+        lookup = defaultdict(lambda : defaultdict(int))
         for row in result.itertuples():
             lookup[str(row.qid)][str(row.docno)] = float(row.score)
         return lookup
@@ -93,7 +93,6 @@ def main(triples_path : str,
         # randomly sample num_neg docs res groupby qid
         negs = neg_pool.groupby('qid').apply(lambda x : sample_negs(x, num_negs)).reset_index(drop=True)[['qid', 'docno']]
         new = pd.concat([new, negs])
-        logging.info(new.head())
         # create dict of qid to list of docids in negs
         negs = negs.groupby('qid')['docno'].apply(list).to_dict()
 
