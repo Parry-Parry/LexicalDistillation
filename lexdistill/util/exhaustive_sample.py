@@ -97,7 +97,7 @@ def main(lookup_path : str, triples_path : str, subset : int = 100000, num_negs 
             to_retrieve -= len(_triples)
             neg_pool = res.copy()
             fails = len(neg_pool)
-            neg_pool = neg_pool[~neg_pool.set_index(['qid', 'docno']).isin(pos_list)].reset_index(drop=True)
+            neg_pool = neg_pool[~neg_pool[['qid', 'docno']].isin(pos_list)].reset_index(drop=True)
             logging.info(f'filtered {fails - len(neg_pool)} samples')
             # randomly sample num_neg docs res groupby qid
             negs = neg_pool.groupby('qid').apply(lambda x : sample_neg(x, num_negs)).reset_index(drop=True)[['qid', 'docno']]
