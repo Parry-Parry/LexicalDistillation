@@ -97,7 +97,7 @@ def main(triples_path : str,
         # create dict of qid to list of docids in negs
         negs = negs.groupby('qid')['docno'].apply(list).to_dict()
 
-        new_triple['doc_id_b'] = new_triple['qid'].apply(lambda x : negs[str(x)])
+        new_triple['doc_id_b'] = new_triple['qid'].apply(lambda x : negs[str(x)] if str(x) in negs.keys() else [])
 
         results_lookup = convert_to_dict(res)
 
