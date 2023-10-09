@@ -45,13 +45,15 @@ def main(triples_path : str,
 
     def pivot_batch(batch):
         records = []
+        pos_list = []
         for row in batch.itertuples():
             records.extend([{
                 'qid': str(row.qid),
                 'docno': str(row.doc_id_a),
                 },
                 ])
-        return pd.DataFrame.from_records(records)
+            pos_list.extend([(str(row.qid), str(row.doc_id_a))])
+        return pd.DataFrame.from_records(records), pos_list
 
     def convert_to_dict(result):
         result.drop_duplicates(['qid', 'docno'], inplace=True)
@@ -61,7 +63,7 @@ def main(triples_path : str,
         return lookup
     
     def score(batch, norm=False):
-        new = pivot_batch(batch.copy())
+        new, _ = pivot_batch(batch.copy())
         topics = new['qid'].drop_duplicates()
         # score with bm25 over all topics and if any (qid docno) pair from new is missing, rsecore missing records with bm25 scorer 
         rez = bm25.transform(topics)[['qid', 'docno', 'score']]
@@ -82,7 +84,7 @@ def main(triples_path : str,
 
     for subset in tqdm(split_df(triples, ceil(len(triples) / batch_size)), desc="Total Batched Iter"):
         new = subset.copy()
-        new = pivot_batch(new)
+        new, pos_list = pivot_batch(new)
         new_triple = new[['qid', 'docno']].copy()
         res : pd.DataFrame = score(subset, norm=True)
 
@@ -99,7 +101,15 @@ def main(triples_path : str,
         new_triple['doc_id_b'] = new_triple['qid'].apply(lambda x : negs[str(x)])
 
         results_lookup = convert_to_dict(res)
-        new['score'] = new.apply(lambda x : results_lookup[str(x.qid)][str(x.docno)], axis=1)
+
+        def lookup(x):
+            try:
+                return results_lookup[str(x.qid)][str(x.docno)]
+            except KeyError:
+                if (str(x.qid), str(x.docno)) in pos_list: return 1.
+                return 0.
+
+        new['score'] = new.apply(lambda x : lookup(x), axis=1)
         main_lookup.update(convert_to_dict(new))
         new_triples.append(new_triple[['qid', 'docno', 'doc_id_b']].rename(columns={'doc_id': 'doc_id_a'}))
 
