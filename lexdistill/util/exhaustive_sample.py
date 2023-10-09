@@ -92,7 +92,9 @@ def main(lookup_path : str, triples_path : str, subset : int = 100000, num_negs 
 
             # filter res by qids that have more than num_neg results 
             logging.info('filtering...')
+            fails = len(neg_pool)
             res = res.groupby('qid').filter(lambda x : len(x) >= num_negs)
+            logging.info(f'filtered {fails - len(res)} samples')
             _triples = _triples[_triples['qid'].isin(res['qid'].unique())]
             to_retrieve -= len(_triples)
             neg_pool = res.copy()
