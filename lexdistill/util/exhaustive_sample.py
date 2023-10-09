@@ -119,8 +119,8 @@ def main(lookup_path : str, triples_path : str, subset : int = 100000, num_negs 
     with open(lookup_path, 'w') as f:
         json.dump(main_lookup, f)
     
-    new_triples = pd.concat(new_triples)
-    new_triples.to_csv(triples_path, sep='\t', index=False)
+    new_set = pd.concat(new_set)
+    new_set.to_csv(triples_path, sep='\t', index=False)
 
 
     return "Done!"
