@@ -118,7 +118,6 @@ class BERTLCETeacherLoader:
             _q, _d, y = self[i]
             q.extend(_q)
             d.extend(_d)
-            logging.info(_q)
             ys.extend(y)
         return self.tokenize(q, d), torch.tensor(ys)
 
