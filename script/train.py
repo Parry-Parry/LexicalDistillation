@@ -15,7 +15,6 @@ def main(config_path : str):
         logging.info('\n'.join([f'RUN NAME: {k}', 'ARGS:', json.dumps(cfg['args'], indent=2)]))
         cmd = ['python', '-m', cfg['script']]
         for arg, val in cfg['args'].items():
-            logging.info(val)
             cmd.append(f'--{arg}')
             cmd.append(str(val))
         sp.run(cmd)
