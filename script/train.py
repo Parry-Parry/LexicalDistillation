@@ -1,5 +1,5 @@
 from fire import Fire
-from pyyaml import load
+from yaml import load
 import json
 import logging 
 
