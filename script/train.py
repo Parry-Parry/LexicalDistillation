@@ -11,7 +11,7 @@ def main(config_path : str):
     runs = load(open(config_path, 'r'), Loader=Loader)
 
     for k, cfg in runs.items():
-        logging.info(f'RUN NAME: {k}', 'ARGS:', json.dumps(cfg['args'], indent=2))
+        logging.info('\n'.join([f'RUN NAME: {k}', 'ARGS:', json.dumps(cfg['args'], indent=2)]))
         cmd = ['python', '-m', cfg['script']]
         for arg, val in cfg['args'].items():
             logging.info(val)
