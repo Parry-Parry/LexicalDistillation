@@ -1,10 +1,15 @@
 from fire import Fire
 from yaml import load
+from yaml import load
+try:
+    from yaml import CLoader as Loader
+except ImportError:
+    from yaml import Loader
 import json
 import logging 
 
 def main(config_path : str):
-    runs = load(open(config_path, 'r'))
+    runs = load(open(config_path, 'r'), Loader=Loader)
 
     for k, cfg in runs.items():
         logging.info(f'RUN NAME: {k} \n ARGS:\n', json.dumps(cfg['args'], indent=2))
