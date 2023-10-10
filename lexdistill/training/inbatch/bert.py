@@ -21,7 +21,8 @@ def main(
         warmup_steps=0,
         shuffle=False,
         wandb_project=None,
-        mode='std',):
+        mode='std',
+        rank : int = None):
 
     os.makedirs(out_dir, exist_ok=True)
 
@@ -43,7 +44,7 @@ def main(
     logging.info(f'Total steps: {total_steps}, batch size: {batch_size}, grad accum: {grad_accum}, warmup steps: {warmup_steps}')
 
     logging.info('loading model...')
-    model = MonoBERTModel.init()
+    model = MonoBERTModel.init(rank=rank)
 
     loss_fn = MarginMultiLoss(batch_size, num_negatives)
 
