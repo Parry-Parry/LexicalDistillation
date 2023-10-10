@@ -24,8 +24,7 @@ class MarginMultiLoss:
         
     def __call__(self, x, y) -> Any:
         x = x.view(self.batch_size, -1)
-        y = y.view(self.batch_size, x.shape[-1], y.shape[-1])
-        y = torch.einsum('ijk-kij', y)
+        y = y.view(y.shape[-1], self.batch_size, x.shape[-1])
 
         x_pos = x[:, 0]
         x_neg = x[:, 1:]
