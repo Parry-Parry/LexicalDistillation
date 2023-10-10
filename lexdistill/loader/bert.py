@@ -109,7 +109,7 @@ class BERTLCETeacherLoader:
             d.append(self.docs[neg_item])
             y.append(neg_score)
         
-        return [q]*len(d), d, y
+        return q*len(d), d, y
     
     def get_batch(self, idx):
         q, d = [], []
