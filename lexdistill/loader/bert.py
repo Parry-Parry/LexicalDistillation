@@ -2,7 +2,8 @@ import pandas as pd
 import json
 import torch
 import os
-from typing import Any, List
+from typing import Any 
+import logging
 
 class BERTLCETeacherLoader:
     teacher = None 
@@ -45,6 +46,7 @@ class BERTLCETeacherLoader:
         with open(self.teacher_file, 'r') as f:
             self.teacher = json.load(f)
         self.triples = pd.read_csv(self.triples_file, sep='\t', converters={'doc_id_pd' : pd.eval}, dtype={'qid':str, 'doc_id_a':str, 'doc_id_b': str}, index_col=False)
+        logging.info(self.triples.head())
         if self.shuffle: self.triples = self.triples.sample(frac=1).reset_index(drop=True)
         self.docs = pd.DataFrame(self.corpus.docs_iter()).set_index("doc_id")["text"].to_dict()
         self.queries = pd.DataFrame(self.corpus.queries_iter()).set_index("query_id")["text"].to_dict()
