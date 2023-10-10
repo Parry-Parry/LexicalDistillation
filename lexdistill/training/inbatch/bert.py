@@ -1,7 +1,7 @@
 from fire import Fire
 import os
 import ir_datasets as irds
-from lexdistill import BERTLCETeacherLoader, MarginMSELoss, MonoBERTModel
+from lexdistill import BERTLCETeacherLoader, MarginMultiLoss, MonoBERTModel
 from transformers import AdamW, get_linear_schedule_with_warmup
 import logging
 import wandb
@@ -45,6 +45,8 @@ def main(
     logging.info('loading model...')
     model = MonoBERTModel.init()
 
+    loss_fn = MarginMultiLoss(batch_size, num_negatives)
+
     logging.info(f'loading loader with mode {mode}...')
     loader = BERTLCETeacherLoader(teacher_file, triples_file, corpus, model.tokenizer, mode=mode, batch_size=batch_size, num_negatives=num_negatives, shuffle=shuffle)
 
@@ -63,7 +65,7 @@ def main(
             y = y.to(model.device)
             pred = model.forward(x)
 
-            loss = MarginMSELoss(pred, y) / grad_accum
+            loss = loss_fn(pred, y) / grad_accum
             loss.backward()
 
             if (int(i + 1) % grad_accum == 0) or (int(i) == int(total_steps // batch_size - 1)): # Why is i a float?

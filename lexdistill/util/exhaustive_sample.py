@@ -51,7 +51,7 @@ def main(lookup_path : str, triples_path : str, subset : int = 100000, num_negs 
     docs = pd.DataFrame(dataset.docs_iter()).set_index('doc_id')['text'].to_dict()
 
     pt_index = pt.get_dataset("msmarco_passage").get_index("terrier_stemmed")
-    pt_index = pt.IndexFactory.of(pt_index, memory=True)
+    pt_index = pt.IndexFactory.of(pt_index, memory=False)
     bm25_scorer = pt.text.scorer(body_attr="text", wmodel="BM25", background_index=pt_index)
     index = PisaIndex.from_dataset("msmarco_passage", threads=8)
 

@@ -44,7 +44,7 @@ class BERTLCETeacherLoader:
     def setup(self) -> None:
         with open(self.teacher_file, 'r') as f:
             self.teacher = json.load(f)
-        self.triples = pd.read_csv(self.triples_file, sep='\t', dtype={'qid':str, 'doc_id_a':str, 'doc_id_b': List[str]}, index_col=False)
+        self.triples = pd.read_csv(self.triples_file, sep='\t', converters={'doc_id_pd' : pd.eval}, dtype={'qid':str, 'doc_id_a':str, 'doc_id_b': str}, index_col=False)
         if self.shuffle: self.triples = self.triples.sample(frac=1).reset_index(drop=True)
         self.docs = pd.DataFrame(self.corpus.docs_iter()).set_index("doc_id")["text"].to_dict()
         self.queries = pd.DataFrame(self.corpus.queries_iter()).set_index("query_id")["text"].to_dict()
@@ -106,7 +106,7 @@ class BERTLCETeacherLoader:
             d.append(self.docs[neg_item])
             y.append(neg_score)
         
-        return q, d, y
+        return [q]*len(d), d, y
     
     def get_batch(self, idx):
         q, d = [], []

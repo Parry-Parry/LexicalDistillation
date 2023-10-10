@@ -21,6 +21,7 @@ class MarginMultiLoss:
     def __init__(self, batch_size : int, num_negatives : int = 1) -> None:
         self.batch_size = batch_size
         self.num_negatives = num_negatives
+        
     def __call__(self, x, y) -> Any:
         x = x.view(self.batch_size, -1)
         y = y.view(self.batch_size, x.shape[-1], y.shape[-1])
