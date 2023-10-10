@@ -4,6 +4,7 @@ import torch
 import os
 from typing import Any 
 import logging
+import ast 
 
 class BERTLCETeacherLoader:
     teacher = None 
@@ -46,7 +47,7 @@ class BERTLCETeacherLoader:
         with open(self.teacher_file, 'r') as f:
             self.teacher = json.load(f)
         self.triples = pd.read_csv(self.triples_file, sep='\t', converters={'doc_id_pd' : pd.eval}, dtype={'qid':str, 'doc_id_a':str, 'doc_id_b': str}, index_col=False)
-        logging.info(self.triples.head())
+        self.triples['doc_id_b'] = self.triples['doc_id_b'].apply(lambda x : ast.literal_eval(x)[:self.num_negatives])
         if self.shuffle: self.triples = self.triples.sample(frac=1).reset_index(drop=True)
         self.docs = pd.DataFrame(self.corpus.docs_iter()).set_index("doc_id")["text"].to_dict()
         self.queries = pd.DataFrame(self.corpus.queries_iter()).set_index("query_id")["text"].to_dict()
@@ -103,7 +104,7 @@ class BERTLCETeacherLoader:
         q, d = [self.queries[item['qid']]], [self.docs[item['doc_id_a']]]
         y = [self.get_teacher_scores(item['qid'], item['doc_id_a'], neg=False)]
         
-        for neg_item in item['doc_id_b'][:self.num_negatives]:
+        for neg_item in item['doc_id_b']:
             neg_score = self.get_teacher_scores(item['qid'], neg_item, neg=True)
             d.append(self.docs[neg_item])
             y.append(neg_score)
