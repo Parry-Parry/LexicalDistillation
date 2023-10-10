@@ -18,7 +18,7 @@ def main(model_dir : str, out : str, eval_name : str, baseline : str = None, mod
     if not model:
         dirs = [f for f in os.listdir(model_dir) if os.path.isdir(join(model_dir, f)) and 'baseline' not in f]
         for _, store in enumerate(dirs):
-            if os.path.exists(join(out, f"{store}_results.csv")):
+            if os.path.exists(join(out, f"{store}_run.gz")):
                 continue
             _model = bm25 >> pt.text.get_text(dataset, "text") >> ElectraScorer(model_name=join(model_dir, store, 'model'))
             res = _model.transform(eval.get_topics())
