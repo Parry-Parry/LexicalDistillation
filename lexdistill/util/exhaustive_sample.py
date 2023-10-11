@@ -45,8 +45,8 @@ def sample_neg(neg_pool, num_negs):
 
 clean = lambda x : re.sub(r"[^a-zA-Z0-9¿]+", " ", x)
 
-def main(lookup_path : str, triples_path : str, subset : int = 100000, num_negs : int = 32, batch_size : int = 1000):
-    dataset = irds.load("msmarco-passage/train/triples-small")
+def main(lookup_path : str, triples_path : str, subset : int = 100000, num_negs : int = 32, batch_size : int = 1000, data_split : str = 'train/triples-small'):
+    dataset = irds.load(f"msmarco-passage/{data_split}")
     queries = pd.DataFrame(dataset.queries_iter()).set_index('query_id')['text'].to_dict()
     docs = pd.DataFrame(dataset.docs_iter()).set_index('doc_id')['text'].to_dict()
 
