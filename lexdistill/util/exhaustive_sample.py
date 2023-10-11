@@ -12,7 +12,7 @@ import re
 from math import ceil
 import ir_datasets as irds
 from pyterrier_pisa import PisaIndex
-import os
+from os.path import join
 
 def convert_to_dict(result):
     result = result.groupby('qid').apply(lambda x: dict(zip(x['docno'], zip(x['score'], x['rank'])))).to_dict()
@@ -45,7 +45,14 @@ def sample_neg(neg_pool, num_negs):
 
 clean = lambda x : re.sub(r"[^a-zA-Z0-9¿]+", " ", x)
 
-def main(lookup_path : str, triples_path : str, subset : int = 100000, num_negs : int = 32, batch_size : int = 1000, data_split : str = 'train/triples-small'):
+def main(out_path : str, 
+         subset : int = 100000, 
+         num_negs : int = 32, 
+         batch_size : int = 1000, 
+         data_split : str = 'train/triples-small',
+         docpairs_file : str = None,
+         val_split : int = None):
+    
     dataset = irds.load(f"msmarco-passage/{data_split}")
     queries = pd.DataFrame(dataset.queries_iter()).set_index('query_id')['text'].to_dict()
     docs = pd.DataFrame(dataset.docs_iter()).set_index('doc_id')['text'].to_dict()
@@ -77,7 +84,24 @@ def main(lookup_path : str, triples_path : str, subset : int = 100000, num_negs 
             res['score'] = res.groupby('qid', group_keys=False)['score'].apply(lambda x: (x - x.min()) / (x.max() - x.min()))
         return res
 
-    train = pd.DataFrame(dataset.docpairs_iter()).rename(columns={'query_id': 'qid',})
+    if docpairs_file:
+        train = pd.read_csv(docpairs_file, sep='\t', index_col=False)
+    else:    
+        train = pd.DataFrame(dataset.docpairs_iter()).rename(columns={'query_id': 'qid',})
+    
+    qrels = pd.DataFrame(dataset.qrels_iter()).rename(columns={'query_id': 'qid'})
+
+    if val_split:
+        val = []
+        val_to_retrieve = val_split
+        while val_to_retrieve > 0:
+            tmp = train.sample(n=val_to_retrieve)
+            tmp = tmp[tmp['qid'].isin(qrels['qid'].unique())]
+            train = train[~train['qid'].isin(tmp['qid'])]
+            val_to_retrieve -= len(tmp)
+            val.append(tmp)
+        val = pd.concat(val)
+        val.to_csv(join(out_path, f'triples.{num_negs}.val.tsv'), sep='\t', index=False)
 
     to_retrieve = subset 
     main_lookup = {}
@@ -121,11 +145,11 @@ def main(lookup_path : str, triples_path : str, subset : int = 100000, num_negs 
             main_lookup.update(convert_to_dict(new))
             new_set.append(_triples[['qid', 'doc_id_a', 'doc_id_b']])
 
-    with open(lookup_path, 'w') as f:
+    with open(join(out_path, f'lookup.{num_negs}.json'), 'w') as f:
         json.dump(main_lookup, f)
     
     new_set = pd.concat(new_set)
-    new_set.to_csv(triples_path, sep='\t', index=False)
+    new_set.to_csv(join(out_path, f'triples.{num_negs}.train.tsv'), sep='\t', index=False)
 
 
     return "Done!"
