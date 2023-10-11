@@ -56,30 +56,37 @@ def main(
     loader.setup()
     model.train()
 
-    with _logger.pbar_raw(desc='training...', total=total_steps//batch_size) as pbar:
-        total_loss = 0.
-        for i in range(total_steps // batch_size):
-            x, y = loader.get_batch(i)
-            x = x.to(model.device)
-            y = y.to(model.device)
-            pred = model.forward(x)
+    def _train_epoch(i):
+        with _logger.pbar_raw(desc=f'training epoch {i}...', total=total_steps//batch_size) as pbar:
+            total_loss = 0.
+            for i in range(total_steps // batch_size):
+                x, y = loader.get_batch(i)
+                x = x.to(model.device)
+                y = y.to(model.device)
+                pred = model.forward(x)
 
-            loss = loss_fn(pred, y) / grad_accum
-            loss.backward()
+                loss = loss_fn(pred, y) / grad_accum
+                loss.backward()
 
-            if (int(i + 1) % grad_accum == 0) or (int(i) == int(total_steps // batch_size - 1)): # Why is i a float?
-                opt.step()
-                opt.zero_grad()
-                sched.step()
+                if (int(i + 1) % grad_accum == 0) or (int(i) == int(total_steps // batch_size - 1)): # Why is i a float?
+                    opt.step()
+                    opt.zero_grad()
+                    sched.step()
 
-            if wandb_project is not None:
-                wandb.log({'loss': loss.item()})
-                wandb.log({'lr': sched.get_last_lr()[0]})
+                if wandb_project is not None:
+                    wandb.log({'loss': loss.item()})
+                    wandb.log({'lr': sched.get_last_lr()[0]})
 
-            total_loss += loss.item()
+                total_loss += loss.item()
 
-            pbar.update(1)
-            pbar.set_postfix({'loss': total_loss/(i+1)})
+                pbar.update(1)
+                pbar.set_postfix({'loss': total_loss/(i+1)})
+
+    epochs = 0
+    while epochs < max_epochs:
+        _train_epoch(epochs+1)
+        epochs += 1
+    
 
     model.save_pretrained(os.path.join(out_dir, 'model'))
 
