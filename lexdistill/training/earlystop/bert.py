@@ -9,7 +9,6 @@ import wandb
 from pyterrier_dr import ElectraScorer
 
 _logger = irds.log.easy()
-global_step = 0
 
 def main(
         triples_file : str, 
@@ -78,8 +77,9 @@ def main(
     model.train()
 
     logging.info('training for a maximum of {} epochs = {} steps'.format(max_epochs, total_steps))
-    
+    global_step = 0
     def _train_epoch(i):
+        global global_step
         total_loss = 0.
         with _logger.pbar_raw(desc=f'training epoch {i}...', total=len(loader.triples)//batch_size) as pbar:
             for j in range(len(loader.triples)//batch_size):
