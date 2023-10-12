@@ -77,9 +77,7 @@ def main(
     model.train()
 
     logging.info('training for a maximum of {} epochs = {} steps'.format(max_epochs, total_steps))
-    global_step = 0
-    def _train_epoch(i):
-        global global_step
+    def _train_epoch(i, global_step=0):
         total_loss = 0.
         with _logger.pbar_raw(desc=f'training epoch {i}...', total=len(loader.triples)//batch_size) as pbar:
             for j in range(len(loader.triples)//batch_size):
@@ -99,7 +97,7 @@ def main(
                 if (global_step % early_check == 0) and (global_step > min_train_steps and val_file is not None):
                     if stopping(model.transfer_state_dict(val_model)):
                         logging.info(f'early stopping at epoch {i}')
-                        return True
+                        return True, global_step
 
                 if wandb_project is not None:
                     wandb.log({'epoch': i, 'loss': loss.item(), 'lr': sched.get_last_lr()[0]})
@@ -108,12 +106,13 @@ def main(
 
                 pbar.update(1)
                 pbar.set_postfix({'Epoch Loss': total_loss/(j+1)})
-        return False
+        return False, global_step
 
     epochs = 0
+    global_step = 0
     value = False
     while epochs < max_epochs and not value:
-        value = _train_epoch(epochs+1)
+        value, global_step = _train_epoch(epochs+1, global_step)
         epochs += 1
 
     model.save_pretrained(os.path.join(out_dir, 'model'))
