@@ -22,13 +22,13 @@ def main(
         num_negatives : int = 1,
         lr : float = 0.00001, 
         grad_accum : int = 1,
-        warmup_steps=0,
+        warmup_steps : int = 0,
         min_train_steps : int = 50000,
-        shuffle=False,
+        shuffle : bool = False,
         wandb_project=None,
-        mode='std',
-        early_patience=30,
-        early_check=4000,
+        mode : str = 'std',
+        early_patience : str = 30,
+        early_check : str = 4000,
         rank : int = None):
 
     os.makedirs(out_dir, exist_ok=True)
@@ -64,7 +64,7 @@ def main(
     if val_file is not None:
         val_set = pd.read_csv(val_file, sep='\t', names=['qid', 'docno', 'score'], index_col=False)
         stopping = EarlyStopping(val_set, 'ndcg_cut_10', corpus.qrels_iter(), mode='max', patience=early_patience)
-        val_model = ElectraScorer(batch_size=val_batch_size)
+        val_model = ElectraScorer(batch_size=val_batch_size, device=model.device)
         val_model.model = model.model
 
     total_steps = len(loader.triples) * max_epochs
