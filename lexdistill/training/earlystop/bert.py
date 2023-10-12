@@ -80,8 +80,10 @@ def main(
     
     def _train_epoch(i):
         total_loss = 0.
+        logging.info('got to inner loop')
         with _logger.pbar_raw(desc=f'training epoch {i}...', total=len(loader.triples)//batch_size) as pbar:
             for j in range(len(loader.triples)//batch_size):
+                logging.info('got to open loop')
                 x, y = loader.get_batch(j)
                 x = x.to(model.device)
                 y = y.to(model.device)
