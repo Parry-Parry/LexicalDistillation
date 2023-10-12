@@ -58,7 +58,9 @@ class EarlyStopping(object):
                             best * min_delta / 100)
     
     def compute_metric(self, ranks):
+        import logging
         ranks = ranks.copy().rename(columns={'qid': 'query_id', 'docno': 'doc_id'})
+        logging.info(ranks.dtypes)
         value = self.evaluator.calc_aggregate(ranks)
         return value[repr(self.metric)]
                 
