@@ -64,9 +64,7 @@ class EarlyStopping(object):
         ranks['query_id'] = ranks['query_id'].astype(str)
         ranks['doc_id'] = ranks['doc_id'].astype(str)
         value = self.evaluator.calc_aggregate(ranks)
-        import logging 
-        logging.info(value)
-        return value[repr(self.metric)]
+        return value.values()[0]
                 
     def __call__(self, model):
         ranks = model.transform(self.val_topics)
