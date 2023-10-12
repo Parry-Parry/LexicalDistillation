@@ -67,6 +67,7 @@ def main(
 
     if val_file is not None:
         val_set = pd.read_csv(val_file, sep='\t', names=['qid', 'docno', 'score'], index_col=False)
+        logging.info(val_set.head())
         val_set['query'] = val_set['qid'].apply(lambda x: loader.queries[str(x)])
         val_set['text'] = val_set['docno'].apply(lambda x: loader.docs[str(x)])
         stopping = EarlyStopping(val_set, 'nDCG@10', corpus.qrels_iter(), mode='max', patience=early_patience)
