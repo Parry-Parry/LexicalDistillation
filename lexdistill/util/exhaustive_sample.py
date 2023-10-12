@@ -99,12 +99,12 @@ def main(out_path : str,
             tmp = tmp[tmp['qid'].isin(qrels['qid'].unique()) & ~tmp['qid'].isin(val['qid'].unique())]
             train = train[~train['qid'].isin(tmp['qid'])]
             val_to_retrieve -= len(tmp)
-            val = pd.concat(val, tmp[['qid', 'doc_id_a']])
-        val = pd.concat(val).rename(columns={'doc_id_a': 'docno'})
+            val = pd.concat([val, tmp[['qid', 'doc_id_a']]])
+        val.rename(columns={'doc_id_a': 'docno'}, inplace=True)
 
         # get top 100 by score
         ranks = bm25.transform(val['qid'].drop_duplicates())[['qid', 'docno', 'score']].groupby('qid').sort_values('score', ascending=False).head(100)[['qid', 'docno']]
-        val = pd.concat(val, ranks).drop_duplicates(['qid', 'docno'])
+        val = pd.concat([val, ranks]).drop_duplicates(['qid', 'docno'])
         val['score'] = 0.
         val.to_csv(join(out_path, f'triples.{num_negs}.val.tsv.gz'), sep='\t', index=False)
 
