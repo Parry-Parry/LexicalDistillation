@@ -110,7 +110,7 @@ def main(
 
     epochs = 0
     value = False
-    while epochs < max_epochs or not value:
+    while epochs < max_epochs and not value:
         value = _train_epoch(epochs+1)
         epochs += 1
 
