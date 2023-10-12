@@ -77,7 +77,7 @@ def main(
     model.train()
 
     logging.info('training for a maximum of {} epochs = {} steps'.format(max_epochs, total_steps))
-    
+    global_step = 0
     def _train_epoch(i):
         total_loss = 0.
         with _logger.pbar_raw(desc=f'training epoch {i}...', total=len(loader.triples)//batch_size) as pbar:
@@ -90,12 +90,12 @@ def main(
                 loss = loss_fn(pred, y) / grad_accum
                 loss.backward()
 
-                if (int(j + 1) % grad_accum == 0) or (int(j) == int(total_steps // batch_size - 1)): # Why is i a float?
+                if (int(j + 1) % grad_accum == 0) or (global_step == int(total_steps // batch_size - 1)): # Why is i a float?
                     opt.step()
                     opt.zero_grad()
                     sched.step()
                 
-                if (int(j) % early_check == 0) and (int(j) > min_train_steps and val_file is not None):
+                if (global_step % early_check == 0) and (global_step > min_train_steps and val_file is not None):
                     if stopping(model.transfer_state_dict(val_model)):
                         logging.info(f'early stopping at epoch {i}')
                         return True
@@ -103,6 +103,7 @@ def main(
                 if wandb_project is not None:
                     wandb.log({'epoch': i, 'loss': loss.item(), 'lr': sched.get_last_lr()[0]})
                 total_loss += loss.item()
+                global_step += 1
 
                 pbar.update(1)
                 pbar.set_postfix({'Epoch Loss': total_loss/(j+1)})
