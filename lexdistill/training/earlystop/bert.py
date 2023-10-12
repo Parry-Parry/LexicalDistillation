@@ -3,7 +3,7 @@ import os
 import ir_datasets as irds
 import pandas as pd
 from lexdistill import BERTLCETeacherLoader, MarginMultiLoss, MonoBERTModel, EarlyStopping
-from transformers import AdamW, get_linear_schedule_with_warmup
+from transformers import AdamW, get_constant_schedule_with_warmup
 import logging
 import wandb
 from pyterrier_dr import ElectraScorer
@@ -72,7 +72,7 @@ def main(
     total_steps = len(loader.triples) * max_epochs
     
     opt = AdamW(model.parameters(), lr=lr)
-    sched = get_linear_schedule_with_warmup(opt, num_warmup_steps=warmup_steps//(batch_size*grad_accum), num_training_steps=total_steps//(batch_size*grad_accum))
+    sched = get_constant_schedule_with_warmup(opt, num_warmup_steps=warmup_steps//(batch_size*grad_accum))
     
     model.train()
 
