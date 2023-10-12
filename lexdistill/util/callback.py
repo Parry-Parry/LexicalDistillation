@@ -61,8 +61,8 @@ class EarlyStopping(object):
 
         ranks = ranks.copy().rename(columns={'qid': 'query_id', 'docno': 'doc_id'})
         ranks['score'] = ranks['score'].astype(float)
-        ranks['query_id'] = ranks['qid'].astype(str)
-        ranks['doc_id'] = ranks['docno'].astype(str)
+        ranks['query_id'] = ranks['query_id'].astype(str)
+        ranks['doc_id'] = ranks['doc_id'].astype(str)
         value = self.evaluator.calc_aggregate(ranks)
         return value[repr(self.metric)]
                 
