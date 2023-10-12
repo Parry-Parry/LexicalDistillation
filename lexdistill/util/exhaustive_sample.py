@@ -99,7 +99,7 @@ def main(out_path : str,
             tmp = tmp[tmp['qid'].isin(qrels['qid'].unique()) & ~tmp['qid'].isin(val['qid'].unique())]
             train = train[~train['qid'].isin(tmp['qid'])]
             val_to_retrieve -= len(tmp)
-            val = pd.concat(val, tmp['qid', 'doc_id_a'])
+            val = pd.concat(val, tmp[['qid', 'doc_id_a']])
         val = pd.concat(val).rename(columns={'doc_id_a': 'docno'})
 
         # get top 100 by score
