@@ -118,7 +118,6 @@ class MonoBERTModel(nn.Module):
     
     def transfer_state_dict(self, skeleton):
         skeleton.model.load_state_dict(self.model.state_dict())
-        return skeleton
         
     def save_pretrained(self, path):
         self.model.save_pretrained(path)

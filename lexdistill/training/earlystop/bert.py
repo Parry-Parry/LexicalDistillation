@@ -67,12 +67,10 @@ def main(
 
     if val_file is not None:
         val_set = pd.read_csv(val_file, sep='\t', index_col=False)
-        logging.info(val_set.head())
         val_set['query'] = val_set['qid'].apply(lambda x: loader.queries[str(x)])
         val_set['text'] = val_set['docno'].apply(lambda x: loader.docs[str(x)])
         stopping = EarlyStopping(val_set, 'nDCG@10', corpus.qrels_iter(), mode='max', patience=early_patience)
         val_model = ElectraScorer(batch_size=val_batch_size, device=model.device)
-        val_model.model = model.model
     
     opt = AdamW(model.parameters(), lr=lr)
     sched = get_constant_schedule_with_warmup(opt, num_warmup_steps=warmup_steps//(batch_size*grad_accum))
@@ -98,7 +96,8 @@ def main(
                     sched.step()
                 
                 if (global_step % early_check == 0) and (global_step > min_train_steps and val_file is not None):
-                    if stopping(model.transfer_state_dict(val_model)):
+                    model.transfer_state_dict(val_model)
+                    if stopping(val_model):
                         logging.info(f'early stopping at epoch {i}')
                         return True, global_step
 
