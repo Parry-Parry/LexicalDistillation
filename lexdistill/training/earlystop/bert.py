@@ -63,7 +63,7 @@ def main(
     
     if val_file is not None:
         val_set = pd.read_csv(val_file, sep='\t', names=['qid', 'docno', 'score'], index_col=False)
-        stopping = EarlyStopping(val_set, 'ndcg_cut_10', corpus.qrels_iter(), mode='max', patience=early_patience)
+        stopping = EarlyStopping(val_set, 'nDCG(rel=2)@10', corpus.qrels_iter(), mode='max', patience=early_patience)
         val_model = ElectraScorer(batch_size=val_batch_size, device=model.device)
         val_model.model = model.model
 
