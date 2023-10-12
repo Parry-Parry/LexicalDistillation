@@ -75,6 +75,8 @@ def main(
     sched = get_linear_schedule_with_warmup(opt, num_warmup_steps=warmup_steps//(batch_size*grad_accum), num_training_steps=total_steps//(batch_size*grad_accum))
     
     model.train()
+
+    logging.info('training for a maximum of {} epochs = {} steps'.format(max_epochs, total_steps))
     
     def _train_epoch(i):
         total_loss = 0.
@@ -95,6 +97,7 @@ def main(
                 
                 if (int(i) % early_check == 0) and (int(i) > min_train_steps and val_file is not None):
                     if stopping(model.transfer_state_dict(val_model)):
+                        logging.info(f'early stopping at epoch {i}')
                         return True
 
                 if wandb_project is not None:
