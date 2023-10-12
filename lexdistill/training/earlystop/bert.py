@@ -105,7 +105,7 @@ def main(
                 total_loss += loss.item()
 
                 pbar.update(1)
-                pbar.set_postfix({'Epoch Loss': total_loss/(i+1)})
+                pbar.set_postfix({'Epoch Loss': total_loss/(j+1)})
         return False
 
     epochs = 0
