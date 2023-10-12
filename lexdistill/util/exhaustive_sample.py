@@ -92,16 +92,21 @@ def main(out_path : str,
     qrels = pd.DataFrame(dataset.qrels_iter()).rename(columns={'query_id': 'qid'})
 
     if val_split:
-        val = []
+        val = pd.DataFrame({'qid' : [], 'doc_id_a': []})
         val_to_retrieve = val_split
         while val_to_retrieve > 0:
-            tmp = train.sample(n=val_to_retrieve)
-            tmp = tmp[tmp['qid'].isin(qrels['qid'].unique())]
+            tmp = train.drop_duplicates('qid').sample(n=val_to_retrieve)
+            tmp = tmp[tmp['qid'].isin(qrels['qid'].unique()) & ~tmp['qid'].isin(val['qid'].unique())]
             train = train[~train['qid'].isin(tmp['qid'])]
             val_to_retrieve -= len(tmp)
-            val.append(tmp)
-        val = pd.concat(val)
-        val.to_csv(join(out_path, f'triples.{num_negs}.val.tsv'), sep='\t', index=False)
+            val = pd.concat(val, tmp['qid', 'doc_id_a'])
+        val = pd.concat(val).rename(columns={'doc_id_a': 'docno'})
+
+        # get top 100 by score
+        ranks = bm25.transform(val['qid'].drop_duplicates())[['qid', 'docno', 'score']].groupby('qid').sort_values('score', ascending=False).head(100)[['qid', 'docno']]
+        val = pd.concat(val, ranks).drop_duplicates(['qid', 'docno'])
+        val['score'] = 0.
+        val.to_csv(join(out_path, f'triples.{num_negs}.val.tsv.gz'), sep='\t', index=False)
 
     to_retrieve = subset 
     main_lookup = {}
@@ -112,23 +117,13 @@ def main(out_path : str,
         for _sub in tqdm(split_df(sub, ceil(len(sub) / batch_size)), desc="Total Batched Iter"):
             _triples = _sub.copy()
             new, pos_list = pivot_batch(_triples)
-            res : pd.DataFrame = score(_sub, norm=True)
-
-            # filter res by qids that have more than num_neg results 
-            logging.info('filtering...')
-            fails = len(res)
-            res = res.groupby('qid').filter(lambda x : len(x) >= num_negs)
-            logging.info(f'filtered {fails - len(res)} total samples')
+            res = score(_sub, norm=True).groupby('qid').filter(lambda x : len(x) >= num_negs)
             _triples = _triples[_triples['qid'].isin(res['qid'].unique())]
             to_retrieve -= len(_triples)
             neg_pool = res.copy()
-            fails = len(neg_pool)
             neg_pool = neg_pool[~neg_pool[['qid', 'docno']].isin(pos_list)].reset_index(drop=True)
-            logging.info(f'filtered {fails - len(neg_pool)} negatives')
-            # randomly sample num_neg docs res groupby qid
             negs = neg_pool.groupby('qid').apply(lambda x : sample_neg(x, num_negs)).reset_index(drop=True)[['qid', 'docno']]
             new = pd.concat([new, negs])
-            # create dict of qid to list of docids in negs
             negs = negs.groupby('qid')['docno'].apply(list).to_dict()
 
             _triples['doc_id_b'] = _triples['qid'].apply(lambda x : negs[str(x)])
@@ -149,7 +144,7 @@ def main(out_path : str,
         json.dump(main_lookup, f)
     
     new_set = pd.concat(new_set)
-    new_set.to_csv(join(out_path, f'triples.{num_negs}.train.tsv'), sep='\t', index=False)
+    new_set.to_csv(join(out_path, f'triples.{num_negs}.train.tsv.gz'), sep='\t', index=False)
 
 
     return "Done!"
