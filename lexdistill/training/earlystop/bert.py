@@ -81,8 +81,8 @@ def main(
     def _train_epoch(i):
         total_loss = 0.
         with _logger.pbar_raw(desc=f'training epoch {i}...', total=len(loader.triples)//batch_size) as pbar:
-            for i in range(len(loader.triples)//batch_size):
-                x, y = loader.get_batch(i)
+            for j in range(len(loader.triples)//batch_size):
+                x, y = loader.get_batch(j)
                 x = x.to(model.device)
                 y = y.to(model.device)
                 pred = model.forward(x)
@@ -90,12 +90,12 @@ def main(
                 loss = loss_fn(pred, y) / grad_accum
                 loss.backward()
 
-                if (int(i + 1) % grad_accum == 0) or (int(i) == int(total_steps // batch_size - 1)): # Why is i a float?
+                if (int(j + 1) % grad_accum == 0) or (int(j) == int(total_steps // batch_size - 1)): # Why is i a float?
                     opt.step()
                     opt.zero_grad()
                     sched.step()
                 
-                if (int(i) % early_check == 0) and (int(i) > min_train_steps and val_file is not None):
+                if (int(j) % early_check == 0) and (int(j) > min_train_steps and val_file is not None):
                     if stopping(model.transfer_state_dict(val_model)):
                         logging.info(f'early stopping at epoch {i}')
                         return True
@@ -110,7 +110,7 @@ def main(
 
     epochs = 0
     value = False
-    while epochs < max_epochs and not value:
+    while epochs < max_epochs or not value:
         value = _train_epoch(epochs+1)
         epochs += 1
 
