@@ -108,7 +108,7 @@ def main(
 
                 pbar.update(1)
                 pbar.set_postfix({'Epoch Loss': total_loss/(i+1)})
-                return False
+        return False
 
     epochs = 0
     value = False
