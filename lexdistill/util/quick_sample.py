@@ -13,9 +13,12 @@ def convert_to_dict(result):
 
 clean = lambda x : re.sub(r"[^a-zA-Z0-9¿]+", " ", x)
 
-def main(out_dir : str, subset : int = 100000):
+def main(out_dir : str, triples_file : str = None, subset : int = 100000):
     dataset = irds.load("msmarco-passage/train/triples-small")
-    train = pd.DataFrame(dataset.docpairs_iter()).rename(columns={'query_id': 'qid',})
+    if triples_file:
+        train = pd.read_csv(triples_file, sep='\t', dtype={'qid':str, 'doc_id_a':str, 'doc_id_b': str}, index_col=False)
+    else:
+        train = pd.DataFrame(dataset.docpairs_iter()).rename(columns={'query_id': 'qid',})
     train = train.sample(n=subset) 
 
     train.to_csv(out_dir, sep='\t', index=False)
