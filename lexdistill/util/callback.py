@@ -1,5 +1,5 @@
 import ir_measures
-import torch
+import numpy as np
 
 
 # Adapted from https://gist.github.com/stefanonardo/693d96ceb2f531fa05db530f3e21517d
@@ -27,7 +27,7 @@ class EarlyStopping(object):
             self.best = metrics
             return False
 
-        if torch.isnan(metrics):
+        if np.isnan(metrics):
             return True
 
         if self.is_better(metrics, self.best):
