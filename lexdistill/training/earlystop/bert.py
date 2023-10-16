@@ -32,6 +32,9 @@ def main(
         rank : int = None):
 
     os.makedirs(out_dir, exist_ok=True)
+    if os.path.exists(os.path.join(out_dir, 'model')):
+        logging.info(f'model already exists at {out_dir}, skipping training')
+        return
 
     if wandb_project is not None:
         wandb.init(project=wandb_project, config={
