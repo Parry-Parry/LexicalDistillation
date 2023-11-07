@@ -1,7 +1,7 @@
 import torch
 from torch import nn
 import torch.nn.functional as F
-from transformers import T5ForConditionalGeneration, T5Tokenizer, ElectraForSequenceClassification, AutoTokenizer
+from transformers import T5ForConditionalGeneration, T5Tokenizer, ElectraForSequenceClassification, ElectraModel, AutoTokenizer
 
 class MonoT5Model(nn.Module):
     def __init__(self, model, tokenizer, rank=None):
@@ -68,7 +68,7 @@ class BaselineT5(nn.Module):
         x['labels'] = self.gen_labels(x['input_ids'])
         return self.model(**x)
 
-class DualMonoT5Model(nn.Module):
+class DuoMonoT5Model(nn.Module):
     def __init__(self, model, tokenizer, rank=None):
         super().__init__()
         self.device = rank if rank else torch.device('cuda' if torch.cuda.is_available() else 'cpu')        
@@ -82,7 +82,7 @@ class DualMonoT5Model(nn.Module):
     def init(rank=None):
         model = T5ForConditionalGeneration.from_pretrained('t5-base')
         tokenizer = T5Tokenizer.from_pretrained('t5-base')
-        return DualMonoT5Model(model, tokenizer, rank)
+        return DuoMonoT5Model(model, tokenizer, rank)
 
     def save_pretrained(self, path):
         self.model.save_pretrained(path)
@@ -136,7 +136,46 @@ class MonoBERTModel(nn.Module):
         logits = self.model(**x).logits
         return F.softmax(logits, dim=1)[:, 1]
 
-class BaselineBERT(nn.Module):
+class BERTDotModel(nn.Module):
+    def __init__(self, model, tokenizer, rank=None, return_vecs=False):
+        super().__init__()
+        self.device = rank if rank else torch.device('cuda' if torch.cuda.is_available() else 'cpu')        
+        self.model = model.to(self.device)
+        self.tokenizer = tokenizer
+
+        self.return_vecs = return_vecs
+    
+    @staticmethod
+    def init(rank=None):
+        model = ElectraModel.from_pretrained('google/electra-base-discriminator', num_labels=2)
+        tokenizer = AutoTokenizer.from_pretrained('google/electra-base-discriminator')
+        return BERTDotModel(model, tokenizer, rank)
+    
+    def transfer_state_dict(self, skeleton):
+        skeleton.model.load_state_dict(self.model.state_dict())
+        
+    def save_pretrained(self, path):
+        self.model.save_pretrained(path)
+    
+    def train(self):
+        self.model.train()
+    
+    def parameters(self):
+        return self.model.parameters()
+    
+    def forward(self, x):
+        query, docs = x 
+
+        e_query = self.model(**query)[0][:,0,:]
+        e_docs = self.model(**docs)[0][:,0,:]
+
+        score = torch.bmm(e_query.unsqueeze(dim=1), e_docs.unsqueeze(dim=2)).squeeze(-1).squeeze(-1)
+
+        if self.return_vecs:
+            return (score, e_query, e_docs)
+        return score
+
+class BERTCatModel(nn.Module):
     def __init__(self, model, tokenizer, rank=None):
         super().__init__()
         self.device = rank if rank else torch.device('cuda' if torch.cuda.is_available() else 'cpu')        
@@ -147,7 +186,7 @@ class BaselineBERT(nn.Module):
     def init(rank=None):
         model = ElectraForSequenceClassification.from_pretrained('google/electra-base-discriminator', num_labels=2)
         tokenizer = AutoTokenizer.from_pretrained('google/electra-base-discriminator')
-        return BaselineBERT(model, tokenizer, rank)
+        return BERTCatModel(model, tokenizer, rank)
 
     def save_pretrained(self, path):
         self.model.save_pretrained(path)
@@ -165,7 +204,7 @@ class BaselineBERT(nn.Module):
         x['labels'] = self.gen_labels(x['input_ids'])
         return self.model(**x)
 
-class DualBERTModel(nn.Module):
+class DuoBERTModel(nn.Module):
     def __init__(self, model, tokenizer, rank=None):
         super().__init__()
         self.device = rank if rank else torch.device('cuda' if torch.cuda.is_available() else 'cpu')        
@@ -176,7 +215,7 @@ class DualBERTModel(nn.Module):
     def init(rank=None):
         model = ElectraForSequenceClassification.from_pretrained('google/electra-base-discriminator', num_labels=2)
         tokenizer = AutoTokenizer.from_pretrained('google/electra-base-discriminator')
-        return DualBERTModel(model, tokenizer, rank)
+        return DuoBERTModel(model, tokenizer, rank)
 
     def save_pretrained(self, path):
         self.model.save_pretrained(path)

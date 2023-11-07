@@ -2,12 +2,11 @@ from fire import Fire
 import os
 import ir_datasets as irds
 import pandas as pd
-from lexdistill import MarginMultiLoss, EarlyStopping, EPICModel, BERTLCETeacherLoader
-from transformers import AdamW, get_constant_schedule_with_warmup
+from lexdistill import BERTLCETeacherLoader, MarginMultiLoss, EarlyStopping, BERTDotModel
+from transformers import AdamW, get_constant_schedule_with_warmup, ElectraModel
 import logging
 import wandb
-from lsr.transformer import LSR, LSRScorer
-
+from pyterrier_dr import BiScorer
 
 _logger = irds.log.easy()
 
@@ -58,7 +57,7 @@ def main(
     corpus = irds.load(dataset_name)
 
     logging.info('loading model...')
-    model = EPICModel.init(rank=rank)
+    model = BERTDotModel.init(rank=rank)
 
     loss_fn = MarginMultiLoss(batch_size, num_negatives)
 
@@ -74,8 +73,8 @@ def main(
         val_set['query'] = val_set['qid'].apply(lambda x: loader.queries[str(x)])
         val_set['text'] = val_set['docno'].apply(lambda x: loader.docs[str(x)])
         stopping = EarlyStopping(val_set, 'nDCG@10', corpus.qrels_iter(), mode='max', patience=early_patience)
-        val_backbone = LSR(None, batch_size=val_batch_size, device=model.device)
-        val_model = LSRScorer(val_backbone)
+        val_backbone = ElectraModel.from_pretrained('google/electra-base-discriminator')
+        val_model = BiScorer(val_backbone, batch_size=val_batch_size, device=model.device, verbose=False)
     opt = AdamW(model.parameters(), lr=lr)
     sched = get_constant_schedule_with_warmup(opt, num_warmup_steps=warmup_steps//(batch_size*grad_accum))
     
