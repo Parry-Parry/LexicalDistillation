@@ -173,7 +173,7 @@ class BERTDotModel(nn.Module):
 
         if self.return_vecs:
             return (score, e_query, e_docs)
-        return score
+        return score, None, None
 
 class BERTCatModel(nn.Module):
     def __init__(self, model, tokenizer, rank=None):

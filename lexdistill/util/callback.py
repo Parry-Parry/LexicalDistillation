@@ -38,7 +38,6 @@ class EarlyStopping(object):
 
         if self.num_bad_epochs >= self.patience:
             return True
-
         return False
 
     def _init_is_better(self, mode, min_delta, percentage):

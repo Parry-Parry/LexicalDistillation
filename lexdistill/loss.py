@@ -3,8 +3,6 @@ import torch
 import torch.nn.functional as F
 import numpy as np
 
-margin = lambda x : x[::2] - x[1::2]
-
 # create margin function which works with multiple negatives (i.e. x.shape[-1] > 1)
 def margin(x):
     return [x[::2, i] - x[1::2, i] for i in range(x.shape[-1])]
@@ -40,3 +38,21 @@ class MarginMultiLoss:
             loss.append(torch.stack([F.mse_loss(x_margins[j], y_margins[j]) for j in range(len(x_margins))]))
         
         return torch.mean(torch.stack(loss))
+
+class InBatchLoss:
+    def __init__(self, batch_size : int, num_negatives : int = 1) -> None:
+        self.batch_size = batch_size
+        self.num_negatives = num_negatives
+        
+    def __call__(self, query_vecs, doc_vecs) -> Any:
+        query_vecs = query_vecs.view(self.batch_size, -1)
+        doc_vecs = doc_vecs.view(self.batch_size, -1, query_vecs.shape[-1])
+        pos_vecs = doc_vecs[:, 0]
+
+        select  = torch.ones((pos_vecs.shape[0], pos_vecs.shape[0]),device=pos_vecs.device)
+        select.fill_diagonal_(0)
+        select = select.bool()
+
+        scores = torch.mm(query_vecs, pos_vecs.transpose(-2,-1))[select]
+        return torch.sum(scores)
+    

@@ -89,6 +89,7 @@ def main(
                 x = x.to(model.device)
                 y = y.to(model.device)
                 pred = model.forward(x)
+                
 
                 loss = loss_fn(pred, y) / grad_accum
                 loss.backward()
