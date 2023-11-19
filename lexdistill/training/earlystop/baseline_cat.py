@@ -2,12 +2,11 @@ from fire import Fire
 import os
 import ir_datasets as irds
 import pandas as pd
-from lexdistill import MarginMultiLoss, EarlyStopping, SPLADEModel, BERTLCETeacherLoader
+from lexdistill import BERTLCETeacherLoader, MarginMultiLoss, BERTCatModel, EarlyStopping
 from transformers import AdamW, get_constant_schedule_with_warmup
 import logging
 import wandb
-from lsr.transformer import LSR, LSRScorer
-
+from pyterrier_dr import ElectraScorer
 
 _logger = irds.log.easy()
 
@@ -45,7 +44,7 @@ def main(
                 'max_epochs': max_epochs,
                 'warmup_steps': warmup_steps,
                 'batch_size': batch_size * grad_accum,
-                'num_negatives': num_negatives,
+                'num_negatives': 1,
                 'lr': lr,
                 'mode': mode,
                 'rank': rank,
@@ -58,9 +57,7 @@ def main(
     corpus = irds.load(dataset_name)
 
     logging.info('loading model...')
-    model = SPLADEModel.init(rank=rank)
-
-    loss_fn = MarginMultiLoss(batch_size, num_negatives)
+    model = BERTCatModel.init(rank=rank)
 
     logging.info(f'loading loader with mode {mode}...')
     loader = BERTLCETeacherLoader(teacher_file, triples_file, corpus, model.tokenizer, mode=mode, batch_size=batch_size, num_negatives=num_negatives, shuffle=shuffle)
@@ -74,8 +71,7 @@ def main(
         val_set['query'] = val_set['qid'].apply(lambda x: loader.queries[str(x)])
         val_set['text'] = val_set['docno'].apply(lambda x: loader.docs[str(x)])
         stopping = EarlyStopping(val_set, 'nDCG@10', corpus.qrels_iter(), mode='max', patience=early_patience)
-        val_backbone = LSR(None, batch_size=val_batch_size, device=model.device)
-        val_model = LSRScorer(val_backbone)
+        val_model = ElectraScorer(batch_size=val_batch_size, device=model.device, verbose=False)
     opt = AdamW(model.parameters(), lr=lr)
     sched = get_constant_schedule_with_warmup(opt, num_warmup_steps=warmup_steps//(batch_size*grad_accum))
     
@@ -89,9 +85,9 @@ def main(
                 x, y = loader.get_batch(j)
                 x = x.to(model.device)
                 y = y.to(model.device)
-                pred = model.forward(x)
+                _, loss = model.forward(x)
 
-                loss = loss_fn(pred, y) / grad_accum
+                loss = loss / grad_accum
                 loss.backward()
 
                 if (int(j + 1) % grad_accum == 0) or (global_step == int(total_steps // batch_size - 1)): # Why is i a float?

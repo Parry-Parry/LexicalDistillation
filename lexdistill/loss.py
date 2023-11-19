@@ -56,3 +56,11 @@ class InBatchLoss:
         scores = torch.mm(query_vecs, pos_vecs.transpose(-2,-1))[select]
         return torch.sum(scores)
     
+class FLOPS:
+    """constraint from Minimizing FLOPs to Learn Efficient Sparse Representations
+    https://arxiv.org/abs/2004.05665
+    """
+
+    def __call__(self, batch_rep):
+        return torch.sum(torch.mean(torch.abs(batch_rep), dim=0) ** 2)
+

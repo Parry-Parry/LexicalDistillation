@@ -202,7 +202,8 @@ class BERTCatModel(nn.Module):
     
     def forward(self, x):
         x['labels'] = self.gen_labels(x['input_ids'])
-        return self.model(**x)
+        result = self.model(**x)
+        return result.logits, result.loss
 
 class DuoBERTModel(nn.Module):
     def __init__(self, model, tokenizer, rank=None):
@@ -236,5 +237,17 @@ class DuoBERTModel(nn.Module):
         result = F.softmax(logits, dim=1)[:, 1]
         return result, output.loss
         
+class SPLADEModel(nn.Module):
+    def __init__(self, model, tokenizer, rank=None):
+        super().__init__()
+        self.device = rank if rank else torch.device('cuda' if torch.cuda.is_available() else 'cpu')        
+        self.model = model.to(self.device)
+        self.tokenizer = tokenizer
+    @staticmethod
+    def init(rank=None):
+        model = ElectraForSequenceClassification.from_pretrained('google/electra-base-discriminator', num_labels=2)
+        tokenizer = AutoTokenizer.from_pretrained('google/electra-base-discriminator')
+        return DuoBERTModel(model, tokenizer, rank)
+
 
 
