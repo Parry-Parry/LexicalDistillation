@@ -152,7 +152,7 @@ class BERTDotModel(nn.Module):
         return BERTDotModel(model, tokenizer, rank, return_vecs)
     
     def transfer_state_dict(self, skeleton):
-        skeleton.model.load_state_dict(self.model.state_dict())
+        skeleton.bi_encoder_model.model.load_state_dict(self.model.state_dict())
         
     def save_pretrained(self, path):
         self.model.save_pretrained(path)

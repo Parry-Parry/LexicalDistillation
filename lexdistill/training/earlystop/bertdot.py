@@ -2,11 +2,11 @@ from fire import Fire
 import os
 import ir_datasets as irds
 import pandas as pd
-from lexdistill import BERTLCETeacherLoader, MarginMultiLoss, EarlyStopping, BERTDotModel
+from lexdistill import BERTLCETeacherLoader, MarginMultiLoss, EarlyStopping, BERTDotModel, InBatchLoss
 from transformers import AdamW, get_constant_schedule_with_warmup, ElectraModel
 import logging
 import wandb
-from pyterrier_dr import BiScorer
+from pyterrier_dr import HgfBiEncoder, BiScorer
 
 _logger = irds.log.easy()
 
@@ -15,6 +15,7 @@ def main(
         teacher_file : str,
         dataset_name : str, 
         out_dir : str, 
+        return_vecs : bool = False,
         val_file : str = None,
         max_epochs : int = 1, 
         batch_size : int = 16, 
@@ -57,9 +58,10 @@ def main(
     corpus = irds.load(dataset_name)
 
     logging.info('loading model...')
-    model = BERTDotModel.init(rank=rank)
+    model = BERTDotModel.init(rank=rank, return_vecs=return_vecs)
 
     loss_fn = MarginMultiLoss(batch_size, num_negatives)
+    in_batch_loss = InBatchLoss(batch_size, num_negatives)
 
     logging.info(f'loading loader with mode {mode}...')
     loader = BERTLCETeacherLoader(teacher_file, triples_file, corpus, model.tokenizer, mode=mode, batch_size=batch_size, num_negatives=num_negatives, shuffle=shuffle)
@@ -74,6 +76,7 @@ def main(
         val_set['text'] = val_set['docno'].apply(lambda x: loader.docs[str(x)])
         stopping = EarlyStopping(val_set, 'nDCG@10', corpus.qrels_iter(), mode='max', patience=early_patience)
         val_backbone = ElectraModel.from_pretrained('google/electra-base-discriminator')
+        val_backbone = HgfBiEncoder(val_backbone, model.tokenizer, device=model.device)
         val_model = BiScorer(val_backbone, batch_size=val_batch_size, device=model.device, verbose=False)
     opt = AdamW(model.parameters(), lr=lr)
     sched = get_constant_schedule_with_warmup(opt, num_warmup_steps=warmup_steps//(batch_size*grad_accum))
@@ -88,10 +91,12 @@ def main(
                 x, y = loader.get_batch(j)
                 x = x.to(model.device)
                 y = y.to(model.device)
-                pred = model.forward(x)
+                pred, query_vec, doc_vec = model.forward(x)
                 
-
-                loss = loss_fn(pred, y) / grad_accum
+                loss = loss_fn(pred, y) 
+                if return_vecs:
+                    loss += in_batch_loss(query_vec, doc_vec)
+                loss = loss / grad_accum
                 loss.backward()
 
                 if (int(j + 1) % grad_accum == 0) or (global_step == int(total_steps // batch_size - 1)): # Why is i a float?
