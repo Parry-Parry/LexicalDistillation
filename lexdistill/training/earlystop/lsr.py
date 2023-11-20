@@ -74,6 +74,7 @@ def main(
         val_set['query'] = val_set['qid'].apply(lambda x: loader.queries[str(x)])
         val_set['text'] = val_set['docno'].apply(lambda x: loader.docs[str(x)])
         stopping = EarlyStopping(val_set, 'nDCG@10', corpus.qrels_iter(), mode='max', patience=early_patience)
+        # TODO: Define backbone
         val_backbone = LSR(None, batch_size=val_batch_size, device=model.device)
         val_model = LSRScorer(val_backbone)
     opt = AdamW(model.parameters(), lr=lr)

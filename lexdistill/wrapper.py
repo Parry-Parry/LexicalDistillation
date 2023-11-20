@@ -146,10 +146,10 @@ class BERTDotModel(nn.Module):
         self.return_vecs = return_vecs
     
     @staticmethod
-    def init(rank=None):
+    def init(rank=None, return_vecs=False):
         model = ElectraModel.from_pretrained('google/electra-base-discriminator', num_labels=2)
         tokenizer = AutoTokenizer.from_pretrained('google/electra-base-discriminator')
-        return BERTDotModel(model, tokenizer, rank)
+        return BERTDotModel(model, tokenizer, rank, return_vecs)
     
     def transfer_state_dict(self, skeleton):
         skeleton.model.load_state_dict(self.model.state_dict())
@@ -187,6 +187,9 @@ class BERTCatModel(nn.Module):
         model = ElectraForSequenceClassification.from_pretrained('google/electra-base-discriminator', num_labels=2)
         tokenizer = AutoTokenizer.from_pretrained('google/electra-base-discriminator')
         return BERTCatModel(model, tokenizer, rank)
+
+    def transfer_state_dict(self, skeleton):
+        skeleton.model.load_state_dict(self.model.state_dict())
 
     def save_pretrained(self, path):
         self.model.save_pretrained(path)
