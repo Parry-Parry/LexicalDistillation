@@ -136,18 +136,6 @@ class BERTdotTeacherLoader(BERTLCETeacherLoader):
                  shuffle : bool = False,
                  tokenizer_kwargs : dict = None) -> None:
         super().__init__(teacher_file, triples_file, corpus, tokenizer, mode, batch_size, num_negatives, shuffle, tokenizer_kwargs)
-    
-    def __getitem__(self, idx):
-        item = self.triples.iloc[idx]
-        q, d = [self.queries[item['qid']]], [self.docs[item['doc_id_a']]]
-        y = [self.get_teacher_scores(item['qid'], item['doc_id_a'], neg=False)]
-        
-        for neg_item in item['doc_id_b']:
-            neg_score = self.get_teacher_scores(item['qid'], neg_item, neg=True)
-            d.append(self.docs[neg_item])
-            y.append(neg_score)
-        
-        return q, d, y
 
     def tokenize(self, t):
         return self.tokenizer(t, **self.tokenizer_kwargs)
