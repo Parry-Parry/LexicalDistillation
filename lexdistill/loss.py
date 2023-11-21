@@ -45,8 +45,6 @@ class InBatchLoss:
         self.num_negatives = num_negatives
         
     def __call__(self, query_vecs, doc_vecs) -> Any:
-        query_vecs = query_vecs.view(self.batch_size, -1)
-        doc_vecs = doc_vecs.view(self.batch_size, -1, query_vecs.shape[-1])
         pos_vecs = doc_vecs[:, 0]
 
         select  = torch.ones((pos_vecs.shape[0], pos_vecs.shape[0]),device=pos_vecs.device)
