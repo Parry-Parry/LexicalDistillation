@@ -166,17 +166,8 @@ class BERTDotModel(nn.Module):
     def forward(self, x):
         query, docs = x 
 
-        import logging 
-        logging.info("query input ids:", query["input_ids"].shape)
-        logging.info("docs input ids:", docs["input_ids"].shape)
-
-        e_query = self.model(**query)[0]
-        e_docs = self.model(**docs)[0]
-
-        logging.info("e_query shape:", e_query.shape)
-        logging.info("e_docs shape:", e_docs.shape)
-        e_query = e_query[:, 0, :]
-        e_docs = e_docs[:, 0, :]
+        e_query = self.model(**query)[0][:, 0, :]
+        e_docs = self.model(**docs)[0][:, 0, :]
 
         score = torch.bmm(e_query.unsqueeze(dim=1), e_docs.unsqueeze(dim=2)).squeeze(-1).squeeze(-1)
 

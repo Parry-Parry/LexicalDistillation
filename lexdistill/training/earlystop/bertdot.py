@@ -96,8 +96,6 @@ def main(
                 docs = docs.to(model.device)
                 y = y.to(model.device)
                 pred, query_vec, doc_vec = model.forward((queries, docs))
-                logging.info("query_vec.shape: " + str(query_vec.shape))
-                logging.info("doc_vec.shape: " + str(doc_vec.shape))
                 loss = loss_fn(pred, y) 
                 if return_vecs:
                     loss += in_batch_loss(query_vec, doc_vec)
