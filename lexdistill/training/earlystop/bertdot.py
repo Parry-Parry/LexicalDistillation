@@ -95,7 +95,9 @@ def main(
                 queries = queries.to(model.device)
                 docs = docs.to(model.device)
                 y = y.to(model.device)
-                pred, query_vec, doc_vec = model.forward((queries, docs))
+
+                pred, query_vec, doc_vec = model.forward((queries, docs, num_negatives))
+                
                 loss = loss_fn(pred, y) 
                 if return_vecs:
                     loss += in_batch_loss(query_vec, doc_vec)
