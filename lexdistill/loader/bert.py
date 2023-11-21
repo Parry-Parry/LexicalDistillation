@@ -147,7 +147,7 @@ class BERTdotTeacherLoader(BERTLCETeacherLoader):
             d.append(self.docs[neg_item])
             y.append(neg_score)
         
-        return q, d, y
+        return [q], d, y
 
     def tokenize(self, t):
         return self.tokenizer(t, **self.tokenizer_kwargs)
