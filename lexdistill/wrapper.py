@@ -169,6 +169,10 @@ class BERTDotModel(nn.Module):
         e_query = self.model(**query)[0][:, 0, :]
         e_docs = self.model(**docs)[0][:, 0, :]
 
+        import logging 
+        logging.info(e_query.shape)
+        logging.info(e_docs.shape)
+        
         score = torch.bmm(e_query.unsqueeze(dim=1), e_docs.unsqueeze(dim=2)).squeeze(-1).squeeze(-1)
 
         if self.return_vecs:

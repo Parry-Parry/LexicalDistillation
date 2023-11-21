@@ -157,7 +157,7 @@ class BERTdotTeacherLoader(BERTLCETeacherLoader):
         ys = []
         for i in range(idx, min(len(self.triples), idx + self.batch_size)):
             _q, _d, y = self[i]
-            q.append(_q)
+            q.extend(_q)
             d.extend(_d)
             ys.extend(y)
         return (self.tokenize(q), self.tokenize(d)), torch.tensor(ys)
