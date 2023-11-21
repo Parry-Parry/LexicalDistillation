@@ -147,7 +147,7 @@ class BERTdotTeacherLoader(BERTLCETeacherLoader):
             d.append(self.docs[neg_item])
             y.append(neg_score)
         
-        return [q], d, y
+        return q, d, y
 
     def tokenize(self, t):
         return self.tokenizer(t, **self.tokenizer_kwargs)
@@ -157,7 +157,7 @@ class BERTdotTeacherLoader(BERTLCETeacherLoader):
         ys = []
         for i in range(idx, min(len(self.triples), idx + self.batch_size)):
             _q, _d, y = self[i]
-            q.extend(_q)
+            q.append(_q)
             d.extend(_d)
             ys.extend(y)
         return (self.tokenize(q), self.tokenize(d)), torch.tensor(ys)
