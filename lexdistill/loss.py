@@ -51,7 +51,7 @@ class InBatchLoss:
         select.fill_diagonal_(0)
         select = select.bool()
 
-        scores = torch.bmm(query_vecs.unsqueeze(dim=1), pos_vecs.transpose(1, 2)).squeeze(-1)[select]
+        scores = torch.bmm(query_vecs, pos_vecs.transpose(0, 1)).squeeze(-1)[select]
         return torch.sum(scores)
     
 class FLOPS:
