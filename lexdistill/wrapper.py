@@ -173,7 +173,7 @@ class BERTDotModel(nn.Module):
         e_docs = e_docs.view(-1, num_negatives+1, e_query.shape[-1])
         logging.info(f'e_docs shape: {e_docs.shape}')
         logging.info(f'e_query shape: {e_query.shape}')
-        e_query = e_query.tile((1, num_negatives+1)).view(e_docs.shape[0], e_query.shape[-1])
+        e_query = e_query.tile((1, num_negatives+1)).view(e_docs.shape[0], e_docs.shape[1], e_query.shape[-1])
         
         
         logging.info(f'e_query shape: {e_query.shape}')
