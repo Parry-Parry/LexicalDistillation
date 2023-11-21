@@ -32,7 +32,7 @@ def main(
         early_check : str = 4000,
         rank : int = None):
     
-    logging.info(batch_size, num_negatives)
+    logging.info([batch_size, num_negatives])
 
     os.makedirs(out_dir, exist_ok=True)
     if os.path.exists(os.path.join(out_dir, 'model')):
