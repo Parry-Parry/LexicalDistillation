@@ -89,9 +89,7 @@ def main(
         with _logger.pbar_raw(desc=f'training epoch {i}...', total=len(loader.triples)//batch_size) as pbar:
             for j in range(len(loader.triples)//batch_size):
                 x, y = loader.get_batch(j)
-                queries, docs = x 
-                queries = queries.to(model.device)
-                docs = docs.to(model.device)
+                queries, docs = x[0].to(model.device), x[1].to(model.device) 
                 y = y.to(model.device)
 
                 pred, query_vec, doc_vec = model.forward((queries, docs, num_negatives))
