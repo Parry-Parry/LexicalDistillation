@@ -136,7 +136,10 @@ class BERTdotTeacherLoader(BERTLCETeacherLoader):
                  shuffle : bool = False,
                  tokenizer_kwargs : dict = None) -> None:
         super().__init__(teacher_file, triples_file, corpus, tokenizer, mode, batch_size, num_negatives, shuffle, tokenizer_kwargs)
-        
+    
+    def tokenize(self, t):
+        return self.tokenizer(t, **self.tokenizer_kwargs)
+
     def get_batch(self, idx):
         q, d = [], []
         ys = []
