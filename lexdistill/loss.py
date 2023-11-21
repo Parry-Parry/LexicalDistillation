@@ -45,7 +45,7 @@ class InBatchLoss:
         self.num_negatives = num_negatives
     
     def __call__(self, query_vecs, doc_vecs) -> Any:
-        pos_vecs = doc_vecs[:, 0, :].unsqueeze(1)
+        pos_vecs = doc_vecs[:, 0, :]
 
         select = torch.ones((pos_vecs.shape[0], pos_vecs.shape[0]),device=pos_vecs.device)
         select.fill_diagonal_(0)
@@ -55,7 +55,7 @@ class InBatchLoss:
         logging.info(f'query_vecs: {query_vecs.shape}')
         logging.info(f'pos_vecs: {pos_vecs.shape}')
 
-        scores = torch.bmm(query_vecs.unsqueeze(1), pos_vecs.transpose(1, 2)).squeeze(-1)[select]
+        scores = torch.mm(query_vecs, pos_vecs.transpose(0, 1)).squeeze(-1)[select]
         return torch.sum(scores)
     
 class FLOPS:
