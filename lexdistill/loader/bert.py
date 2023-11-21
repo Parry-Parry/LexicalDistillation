@@ -121,6 +121,32 @@ class BERTLCETeacherLoader:
             ys.extend(y)
         return self.tokenize(q, d), torch.tensor(ys)
 
+class BERTdotTeacherLoader(BERTLCETeacherLoader):
+    teacher = None 
+    triples = None
+    tokenizer_kwargs = {'padding' : 'longest', 'truncation' : True, 'return_tensors' : 'pt'}
+    def __init__(self, 
+                 teacher_file : str, 
+                 triples_file : str, 
+                 corpus : Any,
+                 tokenizer : Any,
+                 mode = 'std',
+                 batch_size : int = 16,
+                 num_negatives : int = 1,
+                 shuffle : bool = False,
+                 tokenizer_kwargs : dict = None) -> None:
+        super().__init__(teacher_file, triples_file, corpus, tokenizer, mode, batch_size, num_negatives, shuffle, tokenizer_kwargs)
+        
+    def get_batch(self, idx):
+        q, d = [], []
+        ys = []
+        for i in range(idx, min(len(self.triples), idx + self.batch_size)):
+            _q, _d, y = self[i]
+            q.extend(_q)
+            d.extend(_d)
+            ys.extend(y)
+        return (self.tokenize(q), self.tokenize(d)), torch.tensor(ys)
+
 class BERTTeacherLoader:
     teacher = {} 
     triples = None

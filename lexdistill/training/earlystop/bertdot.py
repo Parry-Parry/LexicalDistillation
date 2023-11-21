@@ -2,7 +2,7 @@ from fire import Fire
 import os
 import ir_datasets as irds
 import pandas as pd
-from lexdistill import BERTLCETeacherLoader, MarginMultiLoss, EarlyStopping, BERTDotModel, InBatchLoss
+from lexdistill import BERTdotTeacherLoader, MarginMultiLoss, EarlyStopping, BERTDotModel, InBatchLoss
 from transformers import AdamW, get_constant_schedule_with_warmup, ElectraModel
 import logging
 import wandb
@@ -64,7 +64,7 @@ def main(
     in_batch_loss = InBatchLoss(batch_size, num_negatives)
 
     logging.info(f'loading loader with mode {mode}...')
-    loader = BERTLCETeacherLoader(teacher_file, triples_file, corpus, model.tokenizer, mode=mode, batch_size=batch_size, num_negatives=num_negatives, shuffle=shuffle)
+    loader = BERTdotTeacherLoader(teacher_file, triples_file, corpus, model.tokenizer, mode=mode, batch_size=batch_size, num_negatives=num_negatives, shuffle=shuffle)
     
     logging.info('init loader...')
     loader.setup()
@@ -89,9 +89,11 @@ def main(
         with _logger.pbar_raw(desc=f'training epoch {i}...', total=len(loader.triples)//batch_size) as pbar:
             for j in range(len(loader.triples)//batch_size):
                 x, y = loader.get_batch(j)
-                x = x.to(model.device)
+                queries, docs = x 
+                queries = queries.to(model.device)
+                docs = docs.to(model.device)
                 y = y.to(model.device)
-                pred, query_vec, doc_vec = model.forward(x)
+                pred, query_vec, doc_vec = model.forward((queries, docs))
                 
                 loss = loss_fn(pred, y) 
                 if return_vecs:
