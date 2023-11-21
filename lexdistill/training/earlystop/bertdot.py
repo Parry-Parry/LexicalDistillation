@@ -31,8 +31,6 @@ def main(
         early_patience : str = 30,
         early_check : str = 4000,
         rank : int = None):
-    
-    logging.info([batch_size, num_negatives])
 
     os.makedirs(out_dir, exist_ok=True)
     if os.path.exists(os.path.join(out_dir, 'model')):
@@ -97,7 +95,7 @@ def main(
                 y = y.to(model.device)
 
                 pred, query_vec, doc_vec = model.forward((queries, docs, num_negatives))
-                
+
                 loss = loss_fn(pred, y) 
                 if return_vecs:
                     loss += in_batch_loss(query_vec, doc_vec)

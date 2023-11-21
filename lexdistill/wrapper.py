@@ -164,17 +164,18 @@ class BERTDotModel(nn.Module):
         return self.model.parameters()
     
     def forward(self, x):
+        import logging
         query, docs, num_negatives = x 
 
         e_query = self.model(**query)[0][:, 0, :]
         e_docs = self.model(**docs)[0][:, 0, :]
 
-        # tile e_query num_negatives times
-        # if batch_size is 32 num_negatives is 15, query would be <2, 768>
         e_docs = e_docs.view(-1, num_negatives+1, e_query.shape[-1])
-        e_query = e_query.tile((1, num_negatives+1)).reshape((e_docs.shape[0], e_query.shape[-1]))
+        logging.info(f'e_docs shape: {e_docs.shape}')
+        logging.info(f'e_query shape: {e_query.shape}')
+        e_query = e_query.tile((1, num_negatives+1)).view(e_docs.shape[0], e_query.shape[-1])
         
-        import logging
+        
         logging.info(f'e_query shape: {e_query.shape}')
         logging.info(f'e_docs shape: {e_docs.shape}')
         score = torch.bmm(e_query.unsqueeze(dim=1), e_docs.transpose(1, 2)).squeeze(-1)
