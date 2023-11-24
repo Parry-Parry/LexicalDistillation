@@ -170,9 +170,8 @@ class BERTDotModel(nn.Module):
         e_docs = self.model(**docs)[0][:, 0, :]
 
         e_docs = e_docs.view(-1, num_negatives+1, e_query.shape[-1])
-        e_tiled_query = e_query.tile((1, num_negatives+1)).view(e_docs.shape[0], e_docs.shape[1], e_query.shape[-1])
         
-        score = torch.bmm(e_tiled_query, e_docs.transpose(1, 2)).squeeze(-1)
+        score = torch.bmm(e_query.unsqueeze(1), e_docs.permute(0, 2, 1)).squeeze(1)
         import logging
         logging.info(f'score shape: {score.shape}')
 
