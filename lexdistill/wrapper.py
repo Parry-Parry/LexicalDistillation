@@ -171,7 +171,7 @@ class BERTDotModel(nn.Module):
 
         e_docs = e_docs.view(-1, num_negatives+1, e_query.shape[-1])
         
-        score = torch.einsum('ijk,ilk->il', e_query.unsqueeze(1), e_docs)
+        score = torch.einsum('ijk,ikl->il', e_query.unsqueeze(1), e_docs.permute(0, 2, 1))
 
         if self.return_vecs:
             return (score, e_query, e_docs)
