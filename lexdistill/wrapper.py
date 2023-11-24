@@ -6,7 +6,7 @@ from transformers import T5ForConditionalGeneration, T5Tokenizer, ElectraForSequ
 class MonoT5Model(nn.Module):
     def __init__(self, model, tokenizer, rank=None):
         super().__init__()
-        self.device = rank if rank else torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        self.device = torch.device('cuda', rank) if rank else torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         self.model = model.to(self.device)
         self.tokenizer = tokenizer
 
@@ -39,7 +39,7 @@ class MonoT5Model(nn.Module):
 class BaselineT5(nn.Module):
     def __init__(self, model, tokenizer, rank=None):
         super().__init__()
-        self.device = rank if rank else torch.device('cuda' if torch.cuda.is_available() else 'cpu')        
+        self.device = torch.device('cuda', rank) if rank else torch.device('cuda' if torch.cuda.is_available() else 'cpu')        
         self.model = model.to(self.device)
         self.tokenizer = tokenizer
 
@@ -71,7 +71,7 @@ class BaselineT5(nn.Module):
 class DuoMonoT5Model(nn.Module):
     def __init__(self, model, tokenizer, rank=None):
         super().__init__()
-        self.device = rank if rank else torch.device('cuda' if torch.cuda.is_available() else 'cpu')        
+        self.device = torch.device('cuda', rank) if rank else torch.device('cuda' if torch.cuda.is_available() else 'cpu')        
         self.model = model.to(self.device)
         self.tokenizer = tokenizer
 
@@ -106,7 +106,7 @@ class DuoMonoT5Model(nn.Module):
 class MonoBERTModel(nn.Module):
     def __init__(self, model, tokenizer, rank=None):
         super().__init__()
-        self.device = rank if rank else torch.device('cuda' if torch.cuda.is_available() else 'cpu')        
+        self.device = torch.device('cuda', rank) if rank else torch.device('cuda' if torch.cuda.is_available() else 'cpu')        
         self.model = model.to(self.device)
         self.tokenizer = tokenizer
     
@@ -139,7 +139,7 @@ class MonoBERTModel(nn.Module):
 class BERTDotModel(nn.Module):
     def __init__(self, model, tokenizer, rank=None, return_vecs=False):
         super().__init__()
-        self.device = rank if rank else torch.device('cuda' if torch.cuda.is_available() else 'cpu')        
+        self.device = torch.device('cuda', rank) if rank else torch.device('cuda' if torch.cuda.is_available() else 'cpu')        
         self.model = model.to(self.device)
         self.tokenizer = tokenizer
 
@@ -181,7 +181,7 @@ class BERTDotModel(nn.Module):
 class BERTCatModel(nn.Module):
     def __init__(self, model, tokenizer, rank=None):
         super().__init__()
-        self.device = rank if rank else torch.device('cuda' if torch.cuda.is_available() else 'cpu')        
+        self.device = torch.device('cuda', rank) if rank else torch.device('cuda' if torch.cuda.is_available() else 'cpu')        
         self.model = model.to(self.device)
         self.tokenizer = tokenizer
     
@@ -214,7 +214,7 @@ class BERTCatModel(nn.Module):
 class DuoBERTModel(nn.Module):
     def __init__(self, model, tokenizer, rank=None):
         super().__init__()
-        self.device = rank if rank else torch.device('cuda' if torch.cuda.is_available() else 'cpu')        
+        self.device = torch.device('cuda', rank) if rank else torch.device('cuda' if torch.cuda.is_available() else 'cpu')        
         self.model = model.to(self.device)
         self.tokenizer = tokenizer
     
@@ -246,7 +246,7 @@ class DuoBERTModel(nn.Module):
 class SPLADEModel(nn.Module):
     def __init__(self, model, tokenizer, rank=None):
         super().__init__()
-        self.device = rank if rank else torch.device('cuda' if torch.cuda.is_available() else 'cpu')        
+        self.device = torch.device('cuda', rank) if rank else torch.device('cuda' if torch.cuda.is_available() else 'cpu')        
         self.model = model.to(self.device)
         self.tokenizer = tokenizer
     @staticmethod
