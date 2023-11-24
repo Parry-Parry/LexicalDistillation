@@ -172,7 +172,9 @@ class BERTDotModel(nn.Module):
         e_docs = e_docs.view(-1, num_negatives+1, e_query.shape[-1])
         e_tiled_query = e_query.tile((1, num_negatives+1)).view(e_docs.shape[0], e_docs.shape[1], e_query.shape[-1])
         
-        score = torch.diagonal(torch.bmm(e_tiled_query, e_docs.transpose(1, 2)).squeeze(-1), dim1=-2, dim2=-1)
+        score = torch.bmm(e_tiled_query, e_docs.transpose(1, 2)).squeeze(-1)
+        import logging
+        logging.info(f'score shape: {score.shape}')
 
         if self.return_vecs:
             return (score, e_query, e_docs)
