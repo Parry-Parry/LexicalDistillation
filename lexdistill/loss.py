@@ -51,10 +51,6 @@ class InBatchLoss:
         select.fill_diagonal_(0)
         select = select.bool()
 
-        import logging
-        logging.info(f'query_vecs: {query_vecs.shape}')
-        logging.info(f'pos_vecs: {pos_vecs.shape}')
-
         scores = torch.mm(query_vecs, pos_vecs.transpose(0, 1)).squeeze(-1)[select]
         return torch.sum(scores)
     

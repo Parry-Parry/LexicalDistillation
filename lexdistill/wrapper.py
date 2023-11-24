@@ -147,7 +147,7 @@ class BERTDotModel(nn.Module):
     
     @staticmethod
     def init(rank=None, return_vecs=False):
-        model = ElectraModel.from_pretrained('google/electra-base-discriminator', num_labels=2)
+        model = ElectraModel.from_pretrained('google/electra-base-discriminator')
         tokenizer = AutoTokenizer.from_pretrained('google/electra-base-discriminator')
         return BERTDotModel(model, tokenizer, rank, return_vecs)
     

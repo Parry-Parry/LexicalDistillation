@@ -59,6 +59,7 @@ def main(
 
     logging.info('loading model...')
     model = BERTDotModel.init(rank=rank, return_vecs=return_vecs)
+    logging.info(f'using device {model.device}')
 
     loss_fn = MarginMultiLoss(batch_size, num_negatives)
     in_batch_loss = InBatchLoss(batch_size, num_negatives)
