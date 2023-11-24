@@ -52,7 +52,7 @@ class InBatchLoss:
         select = select.bool()
 
         scores = torch.mm(query_vecs, pos_vecs.t()).squeeze(-1)[select]
-        return torch.sum(scores)
+        return -torch.mean(scores)
     
 class FLOPS:
     """constraint from Minimizing FLOPs to Learn Efficient Sparse Representations
