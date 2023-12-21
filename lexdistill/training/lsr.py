@@ -35,8 +35,6 @@ def main(
         early_patience : str = 30,
         early_check : str = 4000,
         rank : int = None):
-    
-    torch.cuda.set_device(rank)
 
     os.makedirs(out_dir, exist_ok=True)
     if os.path.exists(os.path.join(out_dir, 'model')):
@@ -109,6 +107,7 @@ def main(
         callbacks=callbacks,
         optimizers=(opt, get_constant_schedule_with_warmup(opt, warmup_steps)),
         loss_fn=loss_fn,
+        device=rank
     )
 
     trainer.train()
