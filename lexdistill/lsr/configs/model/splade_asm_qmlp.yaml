@@ -1,0 +1,5 @@
+_target_: lexdistill.lsr.models.DualSparseEncoder
+query_encoder:
+  _target_: lexdistill.lsr.models.TransformerMLPSparseEncoder
+doc_encoder:
+  _target_: lexdistill.lsr.models.TransformerMLMSparseEncoder

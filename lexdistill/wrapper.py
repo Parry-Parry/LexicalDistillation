@@ -1,7 +1,7 @@
 import torch
 from torch import nn
 import torch.nn.functional as F
-from transformers import T5ForConditionalGeneration, T5Tokenizer, ElectraForSequenceClassification, ElectraModel, AutoTokenizer
+from transformers import T5ForConditionalGeneration, T5Tokenizer, ElectraForSequenceClassification, ElectraModel, AutoTokenizer, ElectraForMaskedLM
 
 class MonoT5Model(nn.Module):
     def __init__(self, model, tokenizer, rank=None):
@@ -175,7 +175,7 @@ class BERTDotModel(nn.Module):
 
         if self.return_vecs:
             return (score, e_query, e_docs)
-        return score, None, None
+        return (score, None, None)
 
 class BERTCatModel(nn.Module):
     def __init__(self, model, tokenizer, rank=None):
@@ -250,7 +250,7 @@ class SPLADEModel(nn.Module):
         self.tokenizer = tokenizer
     @staticmethod
     def init(rank=None):
-        model = ElectraForSequenceClassification.from_pretrained('google/electra-base-discriminator', num_labels=2)
+        model = ElectraForMaskedLM.from_pretrained('google/electra-base-discriminator', num_labels=2)
         tokenizer = AutoTokenizer.from_pretrained('google/electra-base-discriminator')
         return DuoBERTModel(model, tokenizer, rank)
 

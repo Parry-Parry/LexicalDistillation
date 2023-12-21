@@ -1,5 +1,8 @@
 import ir_measures
 import numpy as np
+import pandas as pd
+import ir_datasets as irds
+from pyterrier_pisa import PisaIndex
 from transformers import TrainerCallback
 
 # Adapted from https://gist.github.com/stefanonardo/693d96ceb2f531fa05db530f3e21517d
@@ -57,7 +60,6 @@ class EarlyStopping(object):
                             best * min_delta / 100)
     
     def compute_metric(self, ranks):
-
         ranks = ranks.copy().rename(columns={'qid': 'query_id', 'docno': 'doc_id'})
         ranks['score'] = ranks['score'].astype(float)
         ranks['query_id'] = ranks['query_id'].astype(str)
@@ -76,8 +78,8 @@ class EarlyStoppingCallback(TrainerCallback):
     def __init__(self, 
                  val_model,
                  val_topics, 
+                 ir_dataset,
                  metric, 
-                 qrels, 
                  early_check = 4000,
                  min_train_steps = 100000,
                  mode='max', 
@@ -85,6 +87,15 @@ class EarlyStoppingCallback(TrainerCallback):
                  patience=10, 
                  percentage=False) -> None:
         super().__init__()
+        val_topics = pd.read_csv(val_topics, sep='\t', index_col=False) 
+        corpus = irds.load(ir_dataset)
+        queries = pd.DataFrame(corpus.queries_iter()).set_index('query_id').text.to_dict()
+        docs = pd.DataFrame(corpus.docs_iter()).set_index('doc_id').text.to_dict()
+        qrels = corpus.qrels_iter()
+        val_topics['query'] = val_topics['qid'].apply(lambda x: queries[str(x)])
+        val_topics['text'] = val_topics['docno'].apply(lambda x: docs[str(x)])
+        del queries
+        del docs
         self.stopping = EarlyStopping(val_topics, metric, qrels, mode, min_delta, patience, percentage)
         self.val_model = val_model
         self.early_check = early_check
@@ -97,8 +108,52 @@ class EarlyStoppingCallback(TrainerCallback):
             and global_step > self.min_train_steps
             and self.stopping.val_file is not None
         ):
-            model = state.model
-            model.transfer_state_dict(self.val_model)
+            train_model = self.trainer.model
+            self.val_model.query_encoder.load_state_dict(train_model.query_encoder.state_dict())
+            self.val_model.doc_encoder.load_state_dict(train_model.doc_encoder.state_dict())
+            
+            if self.stopping(self.val_model):
+                control.should_training_stop = True  # Stop training
+
+
+class SparseEarlyStoppingCallback(TrainerCallback):
+    def __init__(self, 
+                 val_model,
+                 val_topics, 
+                 ir_dataset,
+                 index,
+                 metric, 
+                 early_check = 4000,
+                 min_train_steps = 100000,
+                 num_results = 1000,
+                 mode='max', 
+                 min_delta=0, 
+                 patience=10, 
+                 percentage=False) -> None:
+        super().__init__()
+        val_topics = pd.read_csv(val_topics, sep='\t', index_col=False) 
+        corpus = irds.load(ir_dataset)
+        queries = pd.DataFrame(corpus.queries_iter()).set_index('query_id').text.to_dict()
+        qrels = corpus.qrels_iter()
+        val_topics['query'] = val_topics['qid'].apply(lambda x: queries[str(x)])
+        val_topics.drop_duplicates(subset=['qid'], inplace=True)
+        del queries
+        self.stopping = EarlyStopping(val_topics, metric, qrels, mode, min_delta, patience, percentage)
+        index = PisaIndex.from_dataset(index).quantized(num_results=num_results)
+        self.val_model = val_model >> index
+        self.early_check = early_check
+        self.min_train_steps = min_train_steps
+
+    def on_step_end(self, args, state, control, **kwargs):
+        global_step = state.global_step
+        if (
+            global_step % self.early_check == 0
+            and global_step > self.min_train_steps
+            and self.stopping.val_file is not None
+        ):
+            train_model = self.trainer.model
+            self.val_model.query_encoder.load_state_dict(train_model.query_encoder.state_dict())
+            self.val_model.doc_encoder.load_state_dict(train_model.doc_encoder.state_dict())
             
             if self.stopping(self.val_model):
                 control.should_training_stop = True  # Stop training
