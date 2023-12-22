@@ -1,6 +1,6 @@
 from torch import nn
 import torch
-from lsr.losses import Loss, dot_product, num_non_zero
+from lexdistill.lsr.losses import Loss, dot_product, num_non_zero
 
 
 class DistilKLLoss(Loss):
