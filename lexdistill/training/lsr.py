@@ -1,7 +1,6 @@
 from fire import Fire
 import os
 import ir_datasets as irds
-from lexdistill.lsr.transformer import LSR
 import torch
 from lexdistill.lsr.losses.margin_mse_loss import MarginMSELoss
 from lexdistill.lsr.models import TransformerMLMSparseEncoder, DualSparseEncoder

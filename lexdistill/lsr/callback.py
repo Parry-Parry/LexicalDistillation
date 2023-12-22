@@ -141,6 +141,7 @@ class SparseEarlyStoppingCallback(TrainerCallback):
         qrels = corpus.qrels_iter()
         val_topics['query'] = val_topics['qid'].apply(lambda x: queries[str(x)])
         val_topics = val_topics[['qid', 'query']].drop_duplicates()
+        print(val_topics.head())
         del queries
         self.stopping = EarlyStopping(val_topics, metric, qrels, mode, min_delta, patience, percentage)
         self.tokenizer = tokenizer
