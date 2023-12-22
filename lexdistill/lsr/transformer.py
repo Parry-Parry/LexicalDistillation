@@ -37,7 +37,7 @@ class LSR(pt.Transformer):
         if device is None:
             device = 'cuda' if torch.cuda.is_available() else 'cpu'
         self.fp16 = fp16
-        self.device = device
+        self.device = model.device
         self.model = model
         self.tokenizer = tokenizer
         all_token_ids = list(range(self.tokenizer.get_vocab_size()))
