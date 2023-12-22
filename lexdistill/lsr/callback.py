@@ -4,6 +4,7 @@ import pandas as pd
 import ir_datasets as irds
 from pyterrier_pisa import PisaIndex
 from transformers import TrainerCallback
+from lexdistill.lsr.transformer import LSR
 
 # Adapted from https://gist.github.com/stefanonardo/693d96ceb2f531fa05db530f3e21517d
 
@@ -118,7 +119,7 @@ class EarlyStoppingCallback(TrainerCallback):
 
 class SparseEarlyStoppingCallback(TrainerCallback):
     def __init__(self, 
-                 val_model,
+                 tokenizer,
                  val_topics, 
                  ir_dataset,
                  index,
@@ -139,8 +140,9 @@ class SparseEarlyStoppingCallback(TrainerCallback):
         val_topics.drop_duplicates(subset=['qid'], inplace=True)
         del queries
         self.stopping = EarlyStopping(val_topics, metric, qrels, mode, min_delta, patience, percentage)
-        index = PisaIndex.from_dataset(index).quantized(num_results=num_results)
-        self.val_model = val_model >> index
+        self.tokenizer = tokenizer
+        self.index = PisaIndex.from_dataset(index).quantized(num_results=num_results)
+        self.val_model = None
         self.early_check = early_check
         self.min_train_steps = min_train_steps
 
@@ -151,9 +153,7 @@ class SparseEarlyStoppingCallback(TrainerCallback):
             and global_step > self.min_train_steps
             and self.stopping.val_file is not None
         ):
-            train_model = self.trainer.model
-            self.val_model.query_encoder.load_state_dict(train_model.query_encoder.state_dict())
-            self.val_model.doc_encoder.load_state_dict(train_model.doc_encoder.state_dict())
+            val_model = LSR(self.trainer.model, self.tokenizer)
             
-            if self.stopping(self.val_model):
+            if self.stopping(val_model):
                 control.should_training_stop = True  # Stop training
