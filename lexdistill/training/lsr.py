@@ -60,7 +60,7 @@ def main(
                 'min_train_steps': min_train_steps,
                 'val_batch_size': val_batch_size,
             })
-    torch.cuda.set_device(rank)
+    if rank: torch.cuda.set_device(rank)
     logging.info('loading model...')
     q_reg = FLOPs(weight=0.1, T=50000)
     d_reg = FLOPs(weight=0.08, T=50000)
@@ -106,6 +106,7 @@ def main(
         dataloader_num_workers=4,
         disable_tqdm=False,
         seed=42,
+        ddp_find_unused_parameters=False,
         report_to='wandb',
         fp16=True,
     )
