@@ -151,7 +151,6 @@ class SparseEarlyStoppingCallback(TrainerCallback):
         if (
             global_step % self.early_check == 0
             and global_step > self.min_train_steps
-            and self.stopping.val_file is not None
         ):
             val_model = LSR(self.trainer.model, self.tokenizer)
             
