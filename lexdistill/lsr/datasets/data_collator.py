@@ -246,10 +246,13 @@ class CustomDataCollator:
         batch_queries = []
         batch_docs = []
         batch_scores = []
-        for (q, dx, yx) in batch:
+        for (q, dx, *args) in batch:
             batch_queries.append(q)
             batch_docs.extend(dx)
-            batch_scores.extend(yx)
+            if len(args) == 0:
+                continue
+            batch_scores.extend(args[0])
+        print(batch_queries)
         tokenized_queries = self.tokenizer(
             batch_queries,
             padding=True,
