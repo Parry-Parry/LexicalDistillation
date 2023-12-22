@@ -47,6 +47,7 @@ class LSR(pt.Transformer):
         self.topk = topk
 
     def encode_queries(self, texts, out_fmt='dict', topk=None):
+        print(f'length of texts: {len(texts)}')
         outputs = []
         if out_fmt != 'dict':
             assert topk is None, "topk only supported when out_fmt='dict'"
@@ -122,6 +123,7 @@ class LSR(pt.Transformer):
         return LSRScorer(self, text_field or self.text_field)
 
     def transform(self, inp):
+        print(inp.columns)
         if all(c in inp.columns for c in ['qid', 'query', self.text_field]):
             return self.scorer()(inp)
         elif 'query' in inp.columns:
