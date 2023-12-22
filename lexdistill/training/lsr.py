@@ -60,7 +60,7 @@ def main(
                 'min_train_steps': min_train_steps,
                 'val_batch_size': val_batch_size,
             })
-    torch.cuda_set_device(rank)
+    torch.cuda.set_device(rank)
     logging.info('loading model...')
     q_reg = FLOPs(weight=0.1, T=50000)
     d_reg = FLOPs(weight=0.08, T=50000)
