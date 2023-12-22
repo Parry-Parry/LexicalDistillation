@@ -73,6 +73,7 @@ class EarlyStopping(object):
     def __call__(self, model):
         print('Running Validation')
         ranks = model.transform(self.val_topics)
+        print('Metric Compute')
         value = self.compute_metric(ranks)
         print(f'Performance: {value}') 
         return self.step(value)
@@ -154,7 +155,7 @@ class SparseEarlyStoppingCallback(TrainerCallback):
             global_step % self.early_check == 0
             and global_step > self.min_train_steps
         ):
-            val_model = LSR(kwargs['model'], self.tokenizer) >> self.index
+            val_model = LSR(kwargs['model'], self.tokenizer, fp16=True) >> self.index
             
             if self.stopping(val_model):
                 control.should_training_stop = True  # Stop training
