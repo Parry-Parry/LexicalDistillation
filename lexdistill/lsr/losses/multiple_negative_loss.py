@@ -65,6 +65,7 @@ class MultipleNegativeLoss(Loss):
         to_log = {
             "query reg": reg_q_output.detach(),
             "doc reg": reg_d_output.detach(),
+            "ce loss": ce_loss.detach(),
             "query length": num_non_zero(q_reps),
             "doc length": num_non_zero(d_reps),
         }

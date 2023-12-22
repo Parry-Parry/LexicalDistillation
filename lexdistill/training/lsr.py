@@ -68,35 +68,36 @@ def main(
     model = DualSparseEncoder(query_encoder=TransformerMLMSparseEncoder(config), doc_encoder=TransformerMLMSparseEncoder(config))
     tokenizer = HFTokenizer.from_pretrained('google/electra-base-discriminator')
 
+    callbacks = []
     if val_file:
         val_model = LSR(model)
         earlystop = SparseEarlyStoppingCallback(val_model, tokenizer, val_file, dataset_name, 'msmarco_passage', 'ndcg_cut_10', early_check=early_check, min_train_steps=min_train_steps, patience=early_patience)
+        callbacks.append(earlystop)
 
     dataset = TripletIDDistilDataset(teacher_file, triples_file, irds.load(dataset_name), num_negatives=num_negatives, shuffle=False)
     dataloader = DistillDataCollator(tokenizer=tokenizer)
-
-    callbacks = [earlystop] if val_file else []
+    
     opt = AdamW(model.parameters(), lr=lr)
 
     training_args = TrainingArguments(
         output_dir=out_dir,
+        do_train=True,
+        do_predict=False,
+        do_eval=False,
         overwrite_output_dir=True,
         num_train_epochs=max_epochs,
         per_device_train_batch_size=batch_size,
         gradient_accumulation_steps=grad_accum,
         evaluation_strategy='no',
         warmup_steps=warmup_steps,
-        logging_dir=out_dir,
-        logging_steps=100,
+        logging_steps=1000,
         learning_rate=lr,
         save_steps=10000,
         save_total_limit=1,
         dataloader_num_workers=4,
-        eval_steps=1000,
         disable_tqdm=False,
         seed=42,
-        report_to='wandb',
-        **({'rank': rank} if rank is not None else {})
+        report_to='wandb'
     )
 
     trainer = HFTrainer(
