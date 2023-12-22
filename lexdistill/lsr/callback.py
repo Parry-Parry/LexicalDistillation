@@ -71,8 +71,10 @@ class EarlyStopping(object):
         return list(value.values())[0]
                 
     def __call__(self, model):
+        print('Running Validation')
         ranks = model.transform(self.val_topics)
         value = self.compute_metric(ranks)
+        print(f'Performance: {value}') 
         return self.step(value)
 
 class EarlyStoppingCallback(TrainerCallback):
