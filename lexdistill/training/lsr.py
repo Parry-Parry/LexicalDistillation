@@ -15,6 +15,8 @@ from transformers import AdamW, get_constant_schedule_with_warmup, TrainingArgum
 import logging
 from lexdistill.lsr.models.mlm import TransformerMLMConfig
 import wandb
+import pyterrier as pt
+if not pt.started(): pt.init()
 
 def main(
         triples_file : str, 
