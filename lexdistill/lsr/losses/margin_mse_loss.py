@@ -48,7 +48,7 @@ class MarginMSELoss(Loss):
         labels = labels.view(batch_size, self.num_negatives+1)
 
         scores = torch.einsum('ik,ikl->il', e_q, e_d.permute(0, 2, 1))
-        scores= scores.view(batch_size, self.num_negatives+1)
+        scores = scores.view(batch_size, self.num_negatives+1)
 
         pos_score = scores[:, 0]
         neg_score = scores[:, 1:]
@@ -57,6 +57,7 @@ class MarginMSELoss(Loss):
         loss = []
         for i in range(labels.shape[0]):
             tmp_y = labels[i]
+            print(tmp_y)
             y_pos = tmp_y[:, 0]
             y_neg = tmp_y[:, 1:]
             y_margins = [y_pos - y_neg[:, j] for j in range(y_neg.shape[-1])]
