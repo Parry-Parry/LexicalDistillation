@@ -49,6 +49,7 @@ class MarginMSELoss(Loss):
 
         scores = torch.einsum('ik,ikl->il', e_q, e_d.permute(0, 2, 1))
         scores = scores.view(batch_size, self.num_negatives+1)
+        print(scores[0])
 
         pos_score = scores[:, 0]
         neg_score = scores[:, 1:]
@@ -59,6 +60,8 @@ class MarginMSELoss(Loss):
         y_margins = [y_pos - y_neg[:, j] for j in range(y_neg.shape[-1])]
         loss = torch.stack([F.mse_loss(x_margins[j], y_margins[j]) for j in range(len(x_margins))])
         mse_loss = torch.mean(loss)
+
+        print(mse_loss)
 
         reg_q_output = (
             torch.tensor(0.0, device=q_reps.device)
