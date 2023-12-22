@@ -70,13 +70,13 @@ def main(
 
     callbacks = []
     if val_file:
-        val_model = LSR(model)
+        val_model = LSR(DualSparseEncoder(query_encoder=TransformerMLMSparseEncoder(config), doc_encoder=TransformerMLMSparseEncoder(config)), tokenizer)
         earlystop = SparseEarlyStoppingCallback(val_model, tokenizer, val_file, dataset_name, 'msmarco_passage', 'ndcg_cut_10', early_check=early_check, min_train_steps=min_train_steps, patience=early_patience)
         callbacks.append(earlystop)
 
     dataset = TripletIDDistilDataset(teacher_file, triples_file, irds.load(dataset_name), num_negatives=num_negatives, shuffle=False)
     dataloader = DistillDataCollator(tokenizer=tokenizer)
-    
+
     opt = AdamW(model.parameters(), lr=lr)
 
     training_args = TrainingArguments(
