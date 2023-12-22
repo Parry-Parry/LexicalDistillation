@@ -88,6 +88,8 @@ def main(
 
     opt = AdamW(model.parameters(), lr=lr)
 
+    print(model.device)
+
     training_args = TrainingArguments(
         output_dir=out_dir,
         do_train=True,

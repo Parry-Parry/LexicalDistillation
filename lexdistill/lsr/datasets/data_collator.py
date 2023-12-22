@@ -242,6 +242,8 @@ class CustomDataCollator:
 
     def __init__(self, tokenizer):
         self.tokenizer = tokenizer
+        self.q_max_length = 250
+        self.d_max_length = 512
 
     def __call__(self, batch):
         batch_queries = []
@@ -260,6 +262,7 @@ class CustomDataCollator:
             batch_queries,
             padding=True,
             truncation=True,
+            max_length=self.q_max_length,
             return_tensors="pt",
             return_special_tokens_mask=True,
         )
@@ -267,6 +270,7 @@ class CustomDataCollator:
             batch_docs,
             padding=True,
             truncation=True,
+            max_length=self.d_max_length,
             return_tensors="pt",
             return_special_tokens_mask=True,
         )
