@@ -135,12 +135,13 @@ class SparseEarlyStoppingCallback(TrainerCallback):
                  patience=10, 
                  percentage=False) -> None:
         super().__init__()
-        val_topics = pd.read_csv(val_topics, sep='\t', index_col=False) 
+        val_topics = pd.read_csv(val_topics, sep='\t', index_col=False)[['qid', 'query']]
         corpus = irds.load(ir_dataset)
         queries = pd.DataFrame(corpus.queries_iter()).set_index('query_id').text.to_dict()
         qrels = corpus.qrels_iter()
         val_topics['query'] = val_topics['qid'].apply(lambda x: queries[str(x)])
         val_topics.drop_duplicates(subset=['qid'], inplace=True)
+        
         del queries
         self.stopping = EarlyStopping(val_topics, metric, qrels, mode, min_delta, patience, percentage)
         self.tokenizer = tokenizer
