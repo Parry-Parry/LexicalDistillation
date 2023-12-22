@@ -47,7 +47,6 @@ class LSR(pt.Transformer):
         self.topk = topk
 
     def encode_queries(self, texts, out_fmt='dict', topk=None):
-        print(f'length of texts: {len(texts)}')
         outputs = []
         if out_fmt != 'dict':
             assert topk is None, "topk only supported when out_fmt='dict'"

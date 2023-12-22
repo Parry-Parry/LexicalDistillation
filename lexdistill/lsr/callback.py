@@ -66,8 +66,6 @@ class EarlyStopping(object):
         ranks['query_id'] = ranks['query_id'].astype(str)
         ranks['doc_id'] = ranks['doc_id'].astype(str)
         value = self.evaluator.calc_aggregate(ranks)
-        import logging
-        logging.info(value)
         return list(value.values())[0]
                 
     def __call__(self, model):
@@ -146,7 +144,6 @@ class SparseEarlyStoppingCallback(TrainerCallback):
         self.stopping = EarlyStopping(val_topics, metric, qrels, mode, min_delta, patience, percentage)
         self.tokenizer = tokenizer
         self.index = PisaIndex.from_dataset(index, threads=threads).quantized(num_results=num_results)
-        self.val_model = None
         self.early_check = early_check
         self.min_train_steps = min_train_steps
 
@@ -156,7 +153,7 @@ class SparseEarlyStoppingCallback(TrainerCallback):
             global_step % self.early_check == 0
             and global_step > self.min_train_steps
         ):
-            val_model = LSR(kwargs['model'], self.tokenizer, fp16=True, batch_size=128) >> self.index
+            val_model = LSR(kwargs['model'], self.tokenizer, fp16=True, batch_size=256) >> self.index
             
             if self.stopping(val_model):
                 control.should_training_stop = True  # Stop training
