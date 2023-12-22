@@ -53,7 +53,6 @@ class MarginMSELoss(Loss):
         neg_score = scores[:, 1:]
 
         x_margins = [pos_score - neg_score[:, i] for i in range(neg_score.shape[-1])]
-        print(x_margins)
         y_pos = labels[:, 0]
         y_neg = labels[:, 1:]
         y_margins = [y_pos - y_neg[:, j] for j in range(y_neg.shape[-1])]
