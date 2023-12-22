@@ -106,7 +106,8 @@ def main(
         dataloader_num_workers=4,
         disable_tqdm=False,
         seed=42,
-        report_to='wandb'
+        report_to='wandb',
+        fp16=True,
     )
 
     trainer = HFTrainer(
