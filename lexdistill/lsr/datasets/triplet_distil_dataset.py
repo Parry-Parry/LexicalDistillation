@@ -75,7 +75,6 @@ class TripletIDDistilDataset(Dataset):
         return len(self.triples)
 
     def __getitem__(self, idx):
-        print(idx)
         item = self.triples.iloc[idx]
         q, d = [self.queries[item['qid']]], [self.docs[item['doc_id_a']]]
         y = [self.get_teacher_scores(item['qid'], item['doc_id_a'], neg=False)]

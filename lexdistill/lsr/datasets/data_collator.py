@@ -196,6 +196,7 @@ class DistillDataCollator:
         self.tokenizer = tokenizer
 
     def __call__(self, batch):
+        print(batch)
         batch_queries = []
         pos_docs = []
         neg_docs = []
@@ -232,5 +233,39 @@ class DistillDataCollator:
             "queries": dict(tokenized_queries),
             "pos_docs": dict(tokenized_pos_docs),
             "neg_docs": dict(tokenized_neg_docs),
+            "labels": torch.tensor(batch_scores) if len(batch_scores) > 0 else None,
+        }
+
+class CustomDataCollator:
+    "Tokenize and batch of (query, pos, neg, pos_score, neg_score)"
+
+    def __init__(self, tokenizer):
+        self.tokenizer = tokenizer
+
+    def __call__(self, batch):
+        batch_queries = []
+        batch_docs = []
+        batch_scores = []
+        for (q, dx, yx) in batch:
+            batch_queries.append(q)
+            batch_docs.extend(dx)
+            batch_scores.extend(yx)
+        tokenized_queries = self.tokenizer(
+            batch_queries,
+            padding=True,
+            truncation=True,
+            return_tensors="pt",
+            return_special_tokens_mask=True,
+        )
+        tokenized_docs = self.tokenizer(
+            batch_docs,
+            padding=True,
+            truncation=True,
+            return_tensors="pt",
+            return_special_tokens_mask=True,
+        )
+        return {
+            "queries": dict(tokenized_queries),
+            "docs_batch": dict(tokenized_docs),
             "labels": torch.tensor(batch_scores) if len(batch_scores) > 0 else None,
         }

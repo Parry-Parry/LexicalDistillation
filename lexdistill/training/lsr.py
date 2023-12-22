@@ -9,7 +9,7 @@ from lexdistill.lsr.tokenizer import HFTokenizer
 from lexdistill.lsr.trainer import HFTrainer
 from lexdistill.lsr.callback import SparseEarlyStoppingCallback
 from lexdistill.lsr.datasets.triplet_distil_dataset import TripletIDDistilDataset
-from lexdistill.lsr.datasets.data_collator import DistillDataCollator
+from lexdistill.lsr.datasets.data_collator import CustomDataCollator
 from lexdistill.lsr.losses.regularizer import FLOPs
 from transformers import AdamW, get_constant_schedule_with_warmup, TrainingArguments
 import logging
@@ -84,7 +84,7 @@ def main(
         callbacks.append(earlystop)
 
     dataset = TripletIDDistilDataset(teacher_file, triples_file, irds.load(dataset_name), num_negatives=num_negatives, shuffle=False)
-    dataloader = DistillDataCollator(tokenizer=tokenizer)
+    dataloader = CustomDataCollator(tokenizer=tokenizer)
 
     opt = AdamW(model.parameters(), lr=lr)
 
