@@ -133,6 +133,7 @@ class SparseEarlyStoppingCallback(TrainerCallback):
                  mode='max', 
                  min_delta=0, 
                  patience=10, 
+                 threads=4,
                  percentage=False) -> None:
         super().__init__()
         val_topics = pd.read_csv(val_topics, sep='\t', index_col=False)
@@ -141,11 +142,10 @@ class SparseEarlyStoppingCallback(TrainerCallback):
         qrels = corpus.qrels_iter()
         val_topics['query'] = val_topics['qid'].apply(lambda x: queries[str(x)])
         val_topics = val_topics[['qid', 'query']].drop_duplicates()
-        print(val_topics.head())
         del queries
         self.stopping = EarlyStopping(val_topics, metric, qrels, mode, min_delta, patience, percentage)
         self.tokenizer = tokenizer
-        self.index = PisaIndex.from_dataset(index).quantized(num_results=num_results)
+        self.index = PisaIndex.from_dataset(index, threads=threads).quantized(num_results=num_results)
         self.val_model = None
         self.early_check = early_check
         self.min_train_steps = min_train_steps

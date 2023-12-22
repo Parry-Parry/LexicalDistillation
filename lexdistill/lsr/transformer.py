@@ -122,7 +122,6 @@ class LSR(pt.Transformer):
         return LSRScorer(self, text_field or self.text_field)
 
     def transform(self, inp):
-        print(inp.columns)
         if all(c in inp.columns for c in ['qid', 'query', self.text_field]):
             return self.scorer()(inp)
         elif 'query' in inp.columns:
