@@ -65,12 +65,10 @@ class TripletIDDistilDataset(Dataset):
         self.docs = pd.DataFrame(self.corpus.docs_iter()).set_index("doc_id")["text"].to_dict()
         self.queries = pd.DataFrame(self.corpus.queries_iter()).set_index("query_id")["text"].to_dict()
     
-    def get_teacher_scores_one_sided(self, qid, doc_id, neg=False): 
+    def get_teacher_scores(self, qid, doc_id, neg=False): 
         if neg == False: return [1.]
-        try:
-            score = self.teacher[str(qid)][str(doc_id)]
-        except KeyError:
-            score = 0. 
+        try: score = self.teacher[str(qid)][str(doc_id)]
+        except KeyError: score = 0. 
         return [score]
 
     def __len__(self):
