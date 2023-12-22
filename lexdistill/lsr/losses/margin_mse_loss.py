@@ -45,6 +45,7 @@ class MarginMSELoss(Loss):
         batch_size = q_reps.size(0)
         e_q = q_reps.view(batch_size, -1)
         e_d = d_reps.view(batch_size, self.num_negatives+1, -1)
+        labels = labels.view(batch_size, self.num_negatives+1)
 
         scores = torch.einsum('ik,ikl->il', e_q, e_d.permute(0, 2, 1))
         scores= scores.view(batch_size, self.num_negatives+1)
