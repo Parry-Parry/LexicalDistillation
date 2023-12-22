@@ -54,18 +54,11 @@ class MarginMSELoss(Loss):
         neg_score = scores[:, 1:]
 
         x_margins = [pos_score - neg_score[:, i] for i in range(neg_score.shape[-1])]
-        loss = []
-        for i in range(labels.shape[0]):
-            tmp_y = labels[i]
-            print(tmp_y)
-            y_pos = tmp_y[:, 0]
-            y_neg = tmp_y[:, 1:]
-            y_margins = [y_pos - y_neg[:, j] for j in range(y_neg.shape[-1])]
-            loss.append(torch.stack([F.mse_loss(x_margins[j], y_margins[j]) for j in range(len(x_margins))]))
-        mse_loss = torch.mean(torch.stack(loss))
-
-        pos_reps = e_d[:, 0, :]
-        neg_reps = e_d[:, 1:, :]
+        y_pos = labels[:, 0]
+        y_neg = labels[:, 1:]
+        y_margins = [y_pos - y_neg[:, j] for j in range(y_neg.shape[-1])]
+        loss = torch.stack([F.mse_loss(x_margins[j], y_margins[j]) for j in range(len(x_margins))])
+        mse_loss = torch.mean(loss)
 
         reg_q_output = (
             torch.tensor(0.0, device=q_reps.device)
@@ -73,9 +66,9 @@ class MarginMSELoss(Loss):
             else self.q_regularizer(q_reps)
         )
         reg_d_output = (
-            torch.tensor(0.0, device=pos_reps.device)
+            torch.tensor(0.0, device=d_reps.device)
             if (self.d_regularizer is None)
-            else (self.d_regularizer(d_reps) + self.d_regularizer(neg_reps)) / 2
+            else (self.d_regularizer(d_reps))
         )
         if not self.q_regularizer is None:
             self.q_regularizer.step()

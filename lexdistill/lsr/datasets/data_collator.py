@@ -256,10 +256,6 @@ class CustomDataCollator:
         # flatten all lists 
         batch_queries = list(chain.from_iterable(batch_queries))
         batch_scores = list(chain.from_iterable(batch_scores))
-
-        print(batch_queries)
-        print(batch_docs)
-        print(batch_scores)
         tokenized_queries = self.tokenizer(
             batch_queries,
             padding=True,
