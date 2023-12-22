@@ -55,6 +55,7 @@ class LSR(pt.Transformer):
             if self.fp16:
                 stack.enter_context(torch.cuda.amp.autocast())
             for batch in chunked(texts, self.batch_size):
+                print('running a batch')
                 enc = self.tokenizer(batch, padding=True, truncation=True, return_special_tokens_mask=True, return_tensors="pt")
                 enc = {k: v.to(self.device) for k, v in enc.items()}
                 res = self.model.encode_queries(**enc).cpu().float()
