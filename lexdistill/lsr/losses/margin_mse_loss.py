@@ -47,9 +47,7 @@ class MarginMSELoss(Loss):
         e_d = d_reps.view(batch_size, self.num_negatives+1, -1)
         labels = labels.view(batch_size, self.num_negatives+1)
 
-        scores = torch.einsum('ik,ikl->il', e_q, e_d.permute(0, 2, 1))
-        scores = scores.view(batch_size, self.num_negatives+1)
-        print(scores[0])
+        scores = torch.bmm(e_q.unsqueeze(1), e_d.transpose(1, 2)).squeeze(1)
 
         pos_score = scores[:, 0]
         neg_score = scores[:, 1:]
