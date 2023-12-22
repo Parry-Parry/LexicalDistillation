@@ -252,7 +252,7 @@ class CustomDataCollator:
             if len(args) == 0:
                 continue
             batch_scores.extend(args[0])
-        print(batch_queries)
+        print(f'single batch: {batch_queries}')
         tokenized_queries = self.tokenizer(
             batch_queries,
             padding=True,
