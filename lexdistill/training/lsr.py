@@ -116,7 +116,7 @@ def main(
         data_collator=dataloader,
         callbacks=callbacks,
         optimizers=(opt, get_constant_schedule_with_warmup(opt, warmup_steps)),
-        loss_fn=loss_fn,
+        loss=loss_fn,
         device=rank
     )
 
