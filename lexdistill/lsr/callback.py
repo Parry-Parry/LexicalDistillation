@@ -156,7 +156,7 @@ class SparseEarlyStoppingCallback(TrainerCallback):
             global_step % self.early_check == 0
             and global_step > self.min_train_steps
         ):
-            val_model = LSR(kwargs['model'], self.tokenizer, fp16=True) >> self.index
+            val_model = LSR(kwargs['model'], self.tokenizer, fp16=True, batch_size=128) >> self.index
             
             if self.stopping(val_model):
                 control.should_training_stop = True  # Stop training
