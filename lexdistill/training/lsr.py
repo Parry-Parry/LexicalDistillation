@@ -75,7 +75,7 @@ def main(
                                                 val_file, 
                                                 ir_dataset=dataset_name, 
                                                 index='msmarco_passage', 
-                                                metric='ndcg_cut_10', 
+                                                metric='nDCG@10', 
                                                 early_check=early_check, 
                                                 min_train_steps=min_train_steps, 
                                                 patience=early_patience)
