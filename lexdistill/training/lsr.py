@@ -72,7 +72,6 @@ def main(
     if val_file:
         val_model = LSR(DualSparseEncoder(query_encoder=TransformerMLMSparseEncoder(config), doc_encoder=TransformerMLMSparseEncoder(config)), tokenizer)
         earlystop = SparseEarlyStoppingCallback(val_model, 
-                                                tokenizer, 
                                                 val_file, 
                                                 ir_dataset=dataset_name, 
                                                 index='msmarco_passage', 
