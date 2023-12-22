@@ -44,22 +44,24 @@ def main(
         return
 
     if wandb_project is not None:
-        wandb.init(project=wandb_project, config={
-                'variant': triples_file.split('/')[-1],
-                'teacher': os.path.basename(teacher_file), 
-                'dataset': dataset_name,
-                'max_epochs': max_epochs,
-                'warmup_steps': warmup_steps,
-                'batch_size': batch_size * grad_accum,
-                'num_negatives': num_negatives,
-                'lr': lr,
-                'mode': mode,
-                'rank': rank,
-                'early_patience': early_patience,
-                'early_check': early_check,
-                'min_train_steps': min_train_steps,
-                'val_batch_size': val_batch_size,
-            })
+        wandb.init(project=wandb_project, 
+                   config={
+                    'variant': triples_file.split('/')[-1],
+                    'teacher': os.path.basename(teacher_file), 
+                    'dataset': dataset_name,
+                    'max_epochs': max_epochs,
+                    'warmup_steps': warmup_steps,
+                    'batch_size': batch_size * grad_accum,
+                    'num_negatives': num_negatives,
+                    'lr': lr,
+                    'mode': mode,
+                    'rank': rank,
+                    'early_patience': early_patience,
+                    'early_check': early_check,
+                    'min_train_steps': min_train_steps,
+                    'val_batch_size': val_batch_size,
+                },
+            group="DDP",)
     if rank: torch.cuda.set_device(rank)
     logging.info('loading model...')
     q_reg = FLOPs(weight=0.1, T=50000)
@@ -101,7 +103,7 @@ def main(
         gradient_accumulation_steps=grad_accum,
         evaluation_strategy='no',
         warmup_steps=warmup_steps,
-        logging_steps=1000,
+        logging_steps=200,
         learning_rate=lr,
         save_steps=10000,
         save_total_limit=1,

@@ -242,8 +242,8 @@ class CustomDataCollator:
 
     def __init__(self, tokenizer):
         self.tokenizer = tokenizer
-        self.q_max_length = 250
-        self.d_max_length = 512
+        self.q_max_length = 30
+        self.d_max_length = 200
 
     def __call__(self, batch):
         batch_queries = []
