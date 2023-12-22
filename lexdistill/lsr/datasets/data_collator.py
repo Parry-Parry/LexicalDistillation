@@ -255,7 +255,6 @@ class CustomDataCollator:
             batch_scores.extend(args[0])
         # flatten all lists 
         batch_queries = list(chain.from_iterable(batch_queries))
-        batch_docs = list(chain.from_iterable(batch_docs))
         batch_scores = list(chain.from_iterable(batch_scores))
 
         print(batch_queries)
