@@ -14,15 +14,13 @@ import wandb
 import pyterrier as pt
 if not pt.started(): pt.init()
 
-def main(
-        triples_file : str, 
+def main(triples_file : str, 
         teacher_file : str,
         dataset_name : str, 
         out_dir : str, 
         val_file : str = None,
         max_epochs : int = 1, 
         batch_size : int = 16, 
-        val_batch_size : int = 128,
         num_negatives : int = 1,
         lr : float = 0.00001, 
         grad_accum : int = 1,
@@ -55,7 +53,6 @@ def main(
                     'early_patience': early_patience,
                     'early_check': early_check,
                     'min_train_steps': min_train_steps,
-                    'val_batch_size': val_batch_size,
                 },
             group="DDP" if not rank else None,
         )
