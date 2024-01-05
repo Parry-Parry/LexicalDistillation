@@ -83,27 +83,25 @@ class SparseEarlyStoppingCallback(TrainerCallback):
                  tokenizer,
                  val_topics, 
                  ir_dataset,
-                 index,
                  metric, 
                  early_check = 4000,
                  min_train_steps = 100000,
-                 num_results = 1000,
                  mode='max', 
                  min_delta=0, 
                  patience=10, 
-                 threads=4,
                  percentage=False) -> None:
         super().__init__()
         val_topics = pd.read_csv(val_topics, sep='\t', index_col=False)
         corpus = irds.load(ir_dataset)
         queries = pd.DataFrame(corpus.queries_iter()).set_index('query_id').text.to_dict()
+        docs = pd.DataFrame(corpus.docs_iter()).set_index('doc_id').text.to_dict()
         qrels = corpus.qrels_iter()
         val_topics['query'] = val_topics['qid'].apply(lambda x: queries[str(x)])
-        val_topics = val_topics[['qid', 'query']].drop_duplicates()
+        val_topics['text'] = val_topics['docno'].apply(lambda x: docs[str(x)])
         del queries
+        del docs
         self.stopping = EarlyStopping(val_topics, metric, qrels, mode, min_delta, patience, percentage)
         self.tokenizer = tokenizer
-        self.index = PisaIndex.from_dataset(index, threads=threads).quantized(num_results=num_results)
         self.early_check = early_check
         self.min_train_steps = min_train_steps
 
@@ -113,7 +111,7 @@ class SparseEarlyStoppingCallback(TrainerCallback):
             global_step % self.early_check == 0
             and global_step > self.min_train_steps
         ):
-            val_model = LSR(kwargs['model'], self.tokenizer, fp16=True, batch_size=256) >> self.index
+            val_model = LSR(kwargs['model'], self.tokenizer, fp16=True, batch_size=256) 
             
             if self.stopping(val_model):
                 control.should_training_stop = True  # Stop training
