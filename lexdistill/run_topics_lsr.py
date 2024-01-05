@@ -9,7 +9,7 @@ from lexdistill.lsr.models.mlm import TransformerMLMConfig
 from lexdistill.lsr.tokenizer import HFTokenizer
 
 def make_lsr(model_path : str):
-    return LSR(model_path, device='cuda', batch_size=64, verbose=True)
+    return LSR(model_path, device='cuda', batch_size=64)
 
 def main(eval : str, run_dir : str, out_dir : str, baseline : str = None, model : str = None, index : str = 'msmarco_passage', dataset : str = 'irds:msmarco-passage/train/triples-small'):  
     dataset = pt.get_dataset(dataset)
