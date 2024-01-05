@@ -11,7 +11,7 @@ def main(eval :str, run_dir : str, out_dir : str):
     files = [f for f in os.listdir(run_dir) if os.path.isfile(join(run_dir, f))]
     ds = irds.load(eval)
     qrels = ds.qrels_iter()
-    metrics = [AP(rel=2), NDCG(cutoff=10), R(rel=2)@1000, P(rel=2)@10, P(rel=2)@1000, RR(rel=2)]
+    metrics = [AP(rel=2), NDCG(cutoff=10), R(rel=2)@100, P(rel=2, cutoff=10), RR(rel=2), RR(rel=2, cutoff=10)]
     evaluate = evaluator(metrics, qrels)
     df = []
     for file in files:
