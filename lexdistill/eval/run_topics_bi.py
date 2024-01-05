@@ -19,7 +19,7 @@ def main(eval : str, run_dir : str, out_dir : str, baseline : str = None, model 
     eval = pt.get_dataset(eval)
     os.makedirs(out_dir, exist_ok=True)
     if baseline : 
-        baseline = bm25 >> pt.text.get_text(dataset, "text") >> create_bi_encoder(join(baseline, 'model'))
+        baseline = bm25 >> pt.text.get_text(dataset, "text") >> create_bi_encoder(join(baseline, 'model', 'encoder'))
         if not os.path.exists(join(out_dir, "baseline_run.gz")):
             res = baseline.transform(eval.get_topics())
             pt.io.write_results(res, join(out_dir, "baseline_run.gz"))
@@ -29,7 +29,7 @@ def main(eval : str, run_dir : str, out_dir : str, baseline : str = None, model 
             if os.path.exists(join(out_dir, f"{store}_run.gz")):
                 continue
             try:
-                _model = bm25 >> pt.text.get_text(dataset, "text") >> create_bi_encoder(join(run_dir, store, 'model'))
+                _model = bm25 >> pt.text.get_text(dataset, "text") >> create_bi_encoder(join(run_dir, store, 'model', 'encoder'))
             except OSError:
                 print(f"Failed to load {store}")
                 continue
@@ -37,7 +37,7 @@ def main(eval : str, run_dir : str, out_dir : str, baseline : str = None, model 
             pt.io.write_results(res, join(out_dir, f"{store}_run.gz"))
             del _model
     else:
-        _model = bm25 >> pt.text.get_text(dataset, "text") >> create_bi_encoder(model_name=join(run_dir, model, 'model'))
+        _model = bm25 >> pt.text.get_text(dataset, "text") >> create_bi_encoder(model_name=join(run_dir, model, 'model', 'encoder'))
         res = _model.transform(eval.get_topics())
         pt.io.write_results(res, join(out_dir, f"{model}_run.gz"))
     return "Success!"
