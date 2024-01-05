@@ -170,7 +170,7 @@ class dotMarginMSELoss(nn.Module):
         scores = (scores - min_values) / (max_values - min_values)
         
         if labels is None:
-            return (scores, None, None)
+            return (scores, None, {})
         labels = labels.view(batch_size, self.num_negatives+1)
         pos_score = scores[:, 0]
         neg_score = scores[:, 1:]
@@ -201,7 +201,7 @@ class catMarginMSELoss(nn.Module):
         scores = F.softmax(logits, dim=-1)[:,1]
 
         if labels is None:
-            return (scores, None, None)
+            return (scores, None, {})
 
         labels = labels.view(-1, self.num_negatives+1)
         pos_score = scores[:, 0]
