@@ -43,7 +43,7 @@ class TripletIDDistilDataset(Dataset):
         return [score]
 
     def __len__(self):
-        return len(self.queries)
+        return len(self.triples)
 
     def __getitem__(self, idx):
         item = self.triples.iloc[idx]
