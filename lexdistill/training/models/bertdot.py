@@ -31,11 +31,11 @@ class BERTdot(PreTrainedModel):
     def save_pretrained(self, model_dir):
         """Save both query and document encoder"""
         self.config.save_pretrained(model_dir)
-        self.encoder.save_pretrained(model_dir, 'encoder')
+        self.encoder.save_pretrained(model_dir)
 
     @classmethod
     def from_pretrained(cls, model_dir_or_name):
         """Load encoder from a directory"""
-        config = dotConfig.from_pretrained(join(model_dir_or_name, 'encoder'))
-        encoder = ElectraModel.from_pretrained(join(model_dir_or_name, 'encoder'))
+        config = dotConfig.from_pretrained(model_dir_or_name)
+        encoder = ElectraModel.from_pretrained(model_dir_or_name)
         return cls(encoder, config)
