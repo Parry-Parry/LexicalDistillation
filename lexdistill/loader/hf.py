@@ -1,5 +1,5 @@
 from itertools import chain
-from datasets import Dataset
+from torch.utils.data import Dataset
 from typing import Any
 import json
 import pandas as pd
@@ -10,7 +10,6 @@ class TripletIDDistilDataset(Dataset):
     """
     Dataset with teacher's scores for distillation
     """
-
     def __init__(self, 
                  teacher_file : str, 
                  triples_file : str, 

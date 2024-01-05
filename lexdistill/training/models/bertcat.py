@@ -15,9 +15,9 @@ class BERTcat(PreTrainedModel):
         super().__init__(config)
         self.classifier = classifier
 
-    def forward(self, loss, batch, labels=None):
+    def forward(self, loss, sequences, labels=None):
         """Compute the loss given (pairs, labels)"""
-        logits = self.classifier(**batch).logits
+        logits = self.classifier(**sequences).logits
         if labels is None:
             output = loss(logits)
         else:
