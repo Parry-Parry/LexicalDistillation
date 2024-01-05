@@ -40,13 +40,12 @@ class TripletIDDistilDataset(Dataset):
         self.docs = pd.DataFrame(self.corpus.docs_iter()).set_index("doc_id")["text"].to_dict()
         self.queries = pd.DataFrame(self.corpus.queries_iter()).set_index("query_id")["text"].to_dict()
     
-    def get_teacher_scores_one_sided(self, qid, doc_id, neg=False): 
+    def get_teacher_scores(self, qid, doc_id, neg=False): 
         if neg == False: return [1.]
         try:
             score = self.teacher[str(qid)][str(doc_id)]
         except KeyError:
             score = 0. 
-
         return [score]
 
     def __len__(self):
@@ -62,6 +61,37 @@ class TripletIDDistilDataset(Dataset):
             y.append(neg_score)
         
         return (q, d, y)
+
+class PerfectMarginDataset(TripletIDDistilDataset):
+    def __init__(self, teacher_file: str, triples_file: str, corpus: Any, tokenizer: Any, batch_size: int = 16, num_negatives: int = 1, shuffle: bool = False, tokenizer_kwargs: dict = None) -> None:
+        super().__init__(teacher_file, triples_file, corpus, tokenizer, batch_size, num_negatives, shuffle, tokenizer_kwargs)
+    
+    def get_teacher_scores(self, qid, doc_id, neg=False):
+        if neg == False: return [1.]
+        else: return [0.]
+
+class StandardMarginDataset(TripletIDDistilDataset):
+    def __init__(self, teacher_file: str, triples_file: str, corpus: Any, tokenizer: Any, batch_size: int = 16, num_negatives: int = 1, shuffle: bool = False, tokenizer_kwargs: dict = None) -> None:
+        super().__init__(teacher_file, triples_file, corpus, tokenizer, batch_size, num_negatives, shuffle, tokenizer_kwargs)
+    def get_teacher_scores(self, qid, doc_id, neg=False):
+        try:
+            score = self.teacher[str(qid)][str(doc_id)]
+        except KeyError:
+            score = 0. if neg else 1.
+        return [score]
+
+class MultiMarginDataset(TripletIDDistilDataset):
+    def __init__(self, teacher_file: str, triples_file: str, corpus: Any, tokenizer: Any, batch_size: int = 16, num_negatives: int = 1, shuffle: bool = False, tokenizer_kwargs: dict = None) -> None:
+        super().__init__(teacher_file, triples_file, corpus, tokenizer, batch_size, num_negatives, shuffle, tokenizer_kwargs)
+    def get_teacher_scores(self, qid, doc_id, neg=False):
+        try:
+            score = self.teacher[str(qid)][str(doc_id)]
+            additional = 0. if neg else 1.
+            score = (score + additional) / 2
+        except KeyError:
+            score = 0. if neg else 1.
+        return [score]
+
 
 class DotDataCollator:
     "Tokenize and batch of (query, pos, neg, pos_score, neg_score)"
