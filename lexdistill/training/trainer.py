@@ -2,7 +2,7 @@ import torch
 import os
 import transformers
 import logging
-from lexdistill.lsr.models import DualSparseEncoder
+from lexdistill.training.models.lsr import DualSparseEncoder
 from collections import defaultdict
 from transformers import ElectraModel, ElectraForSequenceClassification
 
