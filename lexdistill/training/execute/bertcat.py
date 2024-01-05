@@ -2,13 +2,12 @@ from fire import Fire
 import os
 import ir_datasets as irds
 import torch
-from lsr.tokenizer import HFTokenizer
 from lexdistill.training.models.bertcat import BERTcat
 from lexdistill.loss import catMarginMSELoss
 from lexdistill.training.trainer import BERTcatTrainer
 from lexdistill.loader.hf import TripletIDDistilDataset, CatDataCollator
 from lexdistill.util.callback import EncoderEarlyStoppingCallback
-from transformers import AdamW, get_constant_schedule_with_warmup, TrainingArguments
+from transformers import AdamW, get_constant_schedule_with_warmup, TrainingArguments, ElectraTokenizer
 import logging
 import wandb
 import pyterrier as pt
@@ -61,7 +60,7 @@ def main(triples_file : str,
     loss_fn = catMarginMSELoss(num_negatives=num_negatives)
 
     model = BERTcat.from_pretrained('google/electra-base-discriminator')
-    tokenizer = HFTokenizer.from_pretrained('google/electra-base-discriminator')
+    tokenizer = ElectraTokenizer.from_pretrained('google/electra-base-discriminator')
 
     callbacks = []
     if val_file:

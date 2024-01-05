@@ -8,7 +8,7 @@ from lexdistill.loss import dotMarginMSELoss
 from lexdistill.training.trainer import BERTdotTrainer
 from lexdistill.loader.hf import TripletIDDistilDataset, DotDataCollator
 from lexdistill.util.callback import EncoderEarlyStoppingCallback
-from transformers import AdamW, get_constant_schedule_with_warmup, TrainingArguments
+from transformers import AdamW, get_constant_schedule_with_warmup, TrainingArguments, ElectraTokenizer
 import logging
 import wandb
 import pyterrier as pt
@@ -62,7 +62,7 @@ def main(
     loss_fn = dotMarginMSELoss(num_negatives=num_negatives)
 
     model = BERTdot.from_pretrained('google/electra-base-discriminator')
-    tokenizer = HFTokenizer.from_pretrained('google/electra-base-discriminator')
+    tokenizer = ElectraTokenizer.from_pretrained('google/electra-base-discriminator')
 
     callbacks = []
     if val_file:

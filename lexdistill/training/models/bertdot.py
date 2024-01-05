@@ -1,5 +1,4 @@
 from transformers import PreTrainedModel, PretrainedConfig, ElectraModel
-from os.path import join
 
 class dotConfig(PretrainedConfig):
     model_type = "Encoder"
@@ -19,7 +18,6 @@ class BERTdot(PreTrainedModel):
         return self.encoder(**text).last_hidden_states[:, 0, :]
 
     def forward(self, loss, queries, docs_batch, labels=None):
-        print(queries.keys())
         """Compute the loss given (queries, docs, labels)"""
         q_reps = self.encode(**queries)
         docs_batch_rep = self.encode(**docs_batch)
