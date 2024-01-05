@@ -112,7 +112,7 @@ class SPLADEMarginMSELoss(SparseLoss):
         # min max normalise scores over dim 1
         min_values = scores.min(dim=-1, keepdim=True)[0]
         max_values = scores.max(dim=-1, keepdim=True)[0]
-        scores = (scores - min_values) / (max_values - min_values
+        scores = (scores - min_values) / (max_values - min_values)
 
         pos_score = scores[:, 0]
         neg_score = scores[:, 1:]
@@ -168,6 +168,7 @@ class dotMarginMSELoss(nn.Module):
         min_values = scores.min(dim=-1, keepdim=True)[0]
         max_values = scores.max(dim=-1, keepdim=True)[0]
         scores = (scores - min_values) / (max_values - min_values)
+        
         if labels is None:
             return (scores, None, None)
         labels = labels.view(batch_size, self.num_negatives+1)
