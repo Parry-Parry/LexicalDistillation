@@ -93,7 +93,7 @@ class BERTdotTrainer(HFTrainer):
         """
         Compute loss
         """
-        loss_output, to_log = model(self.loss, **inputs)
+        scores, loss_output, to_log = model(self.loss, **inputs)
         for log_metric in to_log:
             self.customed_log[log_metric] += to_log[log_metric]
         return loss_output
