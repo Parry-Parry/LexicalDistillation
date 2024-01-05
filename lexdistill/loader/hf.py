@@ -115,7 +115,6 @@ class DotDataCollator:
             truncation=True,
             max_length=self.q_max_length,
             return_tensors="pt",
-            return_special_tokens_mask=True,
         )
         tokenized_docs = self.tokenizer(
             batch_docs,
@@ -123,7 +122,6 @@ class DotDataCollator:
             truncation=True,
             max_length=self.d_max_length,
             return_tensors="pt",
-            return_special_tokens_mask=True,
         )
         return {
             "queries": dict(tokenized_queries),
@@ -159,7 +157,6 @@ class CatDataCollator:
             truncation=True,
             max_length=self.q_max_length + self.d_max_length,
             return_tensors="pt",
-            return_special_tokens_mask=True,
         )
         return {
             "sequences": dict(tokenized_sequences),
