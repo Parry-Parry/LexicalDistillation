@@ -90,10 +90,11 @@ class MultiMarginDataset(TripletIDDistilDataset):
 class DotDataCollator:
     "Tokenize and batch of (query, pos, neg, pos_score, neg_score)"
 
-    def __init__(self, tokenizer):
+    def __init__(self, tokenizer, special_mask=False):
         self.tokenizer = tokenizer
         self.q_max_length = 30
         self.d_max_length = 200
+        self.special_mask = special_mask
 
     def __call__(self, batch):
         batch_queries = []
@@ -115,6 +116,7 @@ class DotDataCollator:
             truncation=True,
             max_length=self.q_max_length,
             return_tensors="pt",
+            return_special_tokens_mask=self.special_mask,
         )
         tokenized_docs = self.tokenizer(
             batch_docs,
@@ -122,6 +124,7 @@ class DotDataCollator:
             truncation=True,
             max_length=self.d_max_length,
             return_tensors="pt",
+            return_special_tokens_mask=self.special_mask
         )
         return {
             "queries": dict(tokenized_queries),
