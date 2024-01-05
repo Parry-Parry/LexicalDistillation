@@ -28,7 +28,11 @@ def main(eval : str, run_dir : str, out_dir : str, baseline : str = None, model 
         for _, store in enumerate(dirs):
             if os.path.exists(join(out_dir, f"{store}_run.gz")):
                 continue
-            _model = bm25 >> pt.text.get_text(dataset, "text") >> create_bi_encoder(join(run_dir, store, 'model'))
+            try:
+                _model = bm25 >> pt.text.get_text(dataset, "text") >> create_bi_encoder(join(run_dir, store, 'model'))
+            except OSError:
+                print(f"Failed to load {store}")
+                continue
             res = _model.transform(eval.get_topics())
             pt.io.write_results(res, join(out_dir, f"{store}_run.gz"))
             del _model
