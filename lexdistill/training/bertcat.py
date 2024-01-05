@@ -2,15 +2,12 @@ from fire import Fire
 import os
 import ir_datasets as irds
 import torch
-from lsr.models import TransformerMLMSparseEncoder
 from lsr.tokenizer import HFTokenizer
-from lsr.models.mlm import TransformerMLMConfig
-from lsr.losses.regularizer import FLOPs
-from lexdistill.training.models.lsr import DualSparseEncoder
-from lexdistill.loss import SPLADEMarginMSELoss
-from lexdistill.training.trainer import SpladeTrainer
-from lexdistill.loader.hf import TripletIDDistilDataset, DotDataCollator
-from lexdistill.util.callback import SparseEarlyStoppingCallback
+from lexdistill.training.models.bertcat import BERTcat
+from lexdistill.loss import catMarginMSELoss
+from lexdistill.training.trainer import BERTcatTrainer
+from lexdistill.loader.hf import TripletIDDistilDataset, CatDataCollator
+from lexdistill.util.callback import EncoderEarlyStoppingCallback
 from transformers import AdamW, get_constant_schedule_with_warmup, TrainingArguments
 import logging
 import wandb
@@ -64,28 +61,26 @@ def main(
         )
     if rank: torch.cuda.set_device(rank)
     logging.info('loading model...')
-    q_reg = FLOPs(weight=0.1, T=50000)
-    d_reg = FLOPs(weight=0.08, T=50000)
-    loss_fn = SPLADEMarginMSELoss(q_regularizer=q_reg, d_regularizer=d_reg, num_negatives=num_negatives)
+    loss_fn = catMarginMSELoss(num_negatives=num_negatives)
 
-    config = TransformerMLMConfig(tf_base_model_name_or_dir='google/electra-base-discriminator')
-    model = DualSparseEncoder(query_encoder=TransformerMLMSparseEncoder(config), doc_encoder=TransformerMLMSparseEncoder(config))
+    model = BERTcat.from_pretrained('google/electra-base-discriminator')
     tokenizer = HFTokenizer.from_pretrained('google/electra-base-discriminator')
 
     callbacks = []
     if val_file:
-        earlystop = SparseEarlyStoppingCallback(tokenizer, 
+        earlystop = EncoderEarlyStoppingCallback(tokenizer, 
                                                 val_file, 
                                                 ir_dataset=dataset_name, 
                                                 index='msmarco_passage', 
                                                 metric='nDCG@10', 
                                                 early_check=early_check, 
                                                 min_train_steps=min_train_steps, 
-                                                patience=early_patience)
+                                                patience=early_patience,
+                                                model='cat')
         callbacks.append(earlystop)
 
     dataset = TripletIDDistilDataset(teacher_file, triples_file, irds.load(dataset_name), num_negatives=num_negatives, shuffle=False)
-    dataloader = DotDataCollator(tokenizer=tokenizer)
+    dataloader = CatDataCollator(tokenizer=tokenizer)
 
     opt = AdamW(model.parameters(), lr=lr)
 
@@ -112,7 +107,7 @@ def main(
         fp16=True,
     )
 
-    trainer = SpladeTrainer(
+    trainer = BERTcatTrainer(
         model=model,
         args=training_args,
         train_dataset=dataset,

@@ -1,3 +1,4 @@
+from itertools import chain
 from datasets import Dataset
 from typing import Any
 import json
@@ -62,49 +63,81 @@ class TripletIDDistilDataset(Dataset):
         
         return (q, d, y)
 
-class DistillDataCollator:
+class DotDataCollator:
     "Tokenize and batch of (query, pos, neg, pos_score, neg_score)"
 
     def __init__(self, tokenizer):
         self.tokenizer = tokenizer
+        self.q_max_length = 30
+        self.d_max_length = 200
 
     def __call__(self, batch):
         batch_queries = []
-        pos_docs = []
-        neg_docs = []
+        batch_docs = []
         batch_scores = []
-        for (query, doc_group, *args) in batch:
-            batch_queries.append(query)
-            pos_docs.append(doc_group[0])
-            neg_docs.append(doc_group[1])
+        for (q, dx, *args) in batch:
+            batch_queries.append(q)
+            batch_docs.extend(dx)
             if len(args) == 0:
                 continue
-            batch_scores.append(args[0])
+            batch_scores.extend(args[0])
+        # flatten all lists 
+        batch_queries = list(chain.from_iterable(batch_queries))
+        batch_scores = list(chain.from_iterable(batch_scores))
+
         tokenized_queries = self.tokenizer(
             batch_queries,
             padding=True,
             truncation=True,
+            max_length=self.q_max_length,
             return_tensors="pt",
             return_special_tokens_mask=True,
         )
-        tokenized_pos_docs = self.tokenizer(
-            pos_docs,
+        tokenized_docs = self.tokenizer(
+            batch_docs,
             padding=True,
             truncation=True,
-            return_tensors="pt",
-            return_special_tokens_mask=True,
-        )
-        tokenized_neg_docs = self.tokenizer(
-            neg_docs,
-            padding=True,
-            truncation=True,
+            max_length=self.d_max_length,
             return_tensors="pt",
             return_special_tokens_mask=True,
         )
         return {
             "queries": dict(tokenized_queries),
-            "pos_docs": dict(tokenized_pos_docs),
-            "neg_docs": dict(tokenized_neg_docs),
+            "docs_batch": dict(tokenized_docs),
             "labels": torch.tensor(batch_scores) if len(batch_scores) > 0 else None,
         }
     
+class CatDataCollator:
+    "Tokenize and batch of (query, pos, neg, pos_score, neg_score)"
+
+    def __init__(self, tokenizer):
+        self.tokenizer = tokenizer
+        self.q_max_length = 30
+        self.d_max_length = 200
+
+    def __call__(self, batch):
+        batch_queries = []
+        batch_docs = []
+        batch_scores = []
+        for (q, dx, *args) in batch:
+            batch_queries.extend([q]*len(dx))
+            batch_docs.extend(dx)
+            if len(args) == 0:
+                continue
+            batch_scores.extend(args[0])
+        # flatten lists 
+        batch_scores = list(chain.from_iterable(batch_scores))
+
+        tokenized_sequences = self.tokenizer(
+            batch_queries,
+            batch_docs,
+            padding=True,
+            truncation=True,
+            max_length=self.q_max_length + self.d_max_length,
+            return_tensors="pt",
+            return_special_tokens_mask=True,
+        )
+        return {
+            "sequences": dict(tokenized_sequences),
+            "labels": torch.tensor(batch_scores) if len(batch_scores) > 0 else None,
+        }
