@@ -86,7 +86,7 @@ class SpladeTrainer(HFTrainer):
         )
 
 class BERTdotTrainer(HFTrainer):
-    def __init__(*args, loss=None, **kwargs) -> None:
+    def __init__(self, *args, loss=None, **kwargs) -> None:
         super().__init__(*args, loss=loss, **kwargs)
     
     def compute_loss(self, model, inputs, return_outputs=False):
@@ -120,7 +120,7 @@ class BERTdotTrainer(HFTrainer):
         )
 
 class BERTcatTrainer(HFTrainer):
-    def __init__(*args, loss=None, **kwargs) -> None:
+    def __init__(self, *args, loss=None, **kwargs) -> None:
         super().__init__(*args, loss=loss, **kwargs)
     
     def compute_loss(self, model, inputs, return_outputs=False):
