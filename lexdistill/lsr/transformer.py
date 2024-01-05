@@ -33,13 +33,14 @@ index = index_pipeline.index(dataset.get_corpus_iter())
 """
 
 class LSR(pt.Transformer):
-    def __init__(self, model, tokenizer, device=None, batch_size=32, text_field='text', fp16=False, topk=None):
+    def __init__(self, model_name, device=None, batch_size=32, text_field='text', fp16=False, topk=None):
+        self.model_name = model_name
         if device is None:
             device = 'cuda' if torch.cuda.is_available() else 'cpu'
         self.fp16 = fp16
-        self.device = model.device
-        self.model = model
-        self.tokenizer = tokenizer
+        self.device = device
+        self.model = DualSparseEncoder.from_pretrained(model_name).eval().to(device)
+        self.tokenizer = Tokenizer.from_pretrained(os.path.join(model_name, 'tokenizer'))
         all_token_ids = list(range(self.tokenizer.get_vocab_size()))
         self.all_tokens = np.array(self.tokenizer.convert_ids_to_tokens(all_token_ids))
         self.batch_size = batch_size
