@@ -15,7 +15,7 @@ class BERTdot(PreTrainedModel):
         self.encoder = encoder
     
     def encode(self, **text):
-        return self.encoder(**text).last_hidden_states[:, 0, :]
+        return self.encoder(**text).last_hidden_state[:, 0, :]
 
     def forward(self, loss, queries, docs_batch, labels=None):
         """Compute the loss given (queries, docs, labels)"""

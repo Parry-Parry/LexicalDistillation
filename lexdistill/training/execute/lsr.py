@@ -83,7 +83,7 @@ def main(
         callbacks.append(earlystop)
 
     dataset = TripletIDDistilDataset(teacher_file, triples_file, irds.load(dataset_name), num_negatives=num_negatives, shuffle=False)
-    dataloader = DotDataCollator(tokenizer=tokenizer)
+    dataloader = DotDataCollator(tokenizer=tokenizer, special_mask=True)
 
     opt = AdamW(model.parameters(), lr=lr)
 
