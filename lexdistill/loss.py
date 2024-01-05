@@ -110,7 +110,9 @@ class SPLADEMarginMSELoss(SparseLoss):
         scores = torch.einsum('ik,ikl->il', e_q, e_d.permute(0, 2, 1))
 
         # min max normalise scores over dim 1
-        scores = (scores - scores.min(dim=1, keepdim=True)[0]) / (scores.max(dim=1, keepdim=True)[0] - scores.min(dim=1, keepdim=True)[0])
+        min_values = scores.min(dim=-1, keepdim=True)[0]
+        max_values = scores.max(dim=-1, keepdim=True)[0]
+        scores = (scores - min_values) / (max_values - min_values
 
         pos_score = scores[:, 0]
         neg_score = scores[:, 1:]
@@ -163,7 +165,9 @@ class dotMarginMSELoss(nn.Module):
         e_d = d_reps.view(batch_size, self.num_negatives+1, -1)
         scores = torch.einsum('ik,ikl->il', e_q, e_d.permute(0, 2, 1))
         # min max normalise scores over dim 1
-        scores = (scores - scores.min(dim=1, keepdim=True)[0]) / (scores.max(dim=1, keepdim=True)[0] - scores.min(dim=1, keepdim=True)[0])
+        min_values = scores.min(dim=-1, keepdim=True)[0]
+        max_values = scores.max(dim=-1, keepdim=True)[0]
+        scores = (scores - min_values) / (max_values - min_values)
         if labels is None:
             return (scores, None, None)
         labels = labels.view(batch_size, self.num_negatives+1)
