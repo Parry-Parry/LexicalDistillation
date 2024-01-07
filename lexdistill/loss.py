@@ -202,7 +202,7 @@ class catMarginMSELoss(nn.Module):
 
         if labels is None:
             return (scores, None, {})
-
+        scores = scores.view(-1, self.num_negatives+1)
         labels = labels.view(-1, self.num_negatives+1)
         pos_score = scores[:, 0]
         neg_score = scores[:, 1:]
