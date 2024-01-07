@@ -57,16 +57,16 @@ class TripletIDDistilDataset(Dataset):
         return (q, d, y)
 
 class PerfectMarginDataset(TripletIDDistilDataset):
-    def __init__(self, teacher_file: str, triples_file: str, corpus: Any, batch_size: int = 16, num_negatives: int = 1, shuffle: bool = False) -> None:
-        super().__init__(teacher_file, triples_file, corpus, batch_size, num_negatives, shuffle)
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
     
     def get_teacher_scores(self, qid, doc_id, neg=False):
         if neg == False: return [1.]
         else: return [0.]
 
 class StandardMarginDataset(TripletIDDistilDataset):
-    def __init__(self, teacher_file: str, triples_file: str, corpus: Any, tokenizer: Any, batch_size: int = 16, num_negatives: int = 1, shuffle: bool = False) -> None:
-        super().__init__(teacher_file, triples_file, corpus, tokenizer, batch_size, num_negatives, shuffle)
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
     def get_teacher_scores(self, qid, doc_id, neg=False):
         try:
             score = self.teacher[str(qid)][str(doc_id)]
@@ -75,8 +75,8 @@ class StandardMarginDataset(TripletIDDistilDataset):
         return [score]
 
 class MultiMarginDataset(TripletIDDistilDataset):
-    def __init__(self, teacher_file: str, triples_file: str, corpus: Any, batch_size: int = 16, num_negatives: int = 1, shuffle: bool = False) -> None:
-        super().__init__(teacher_file, triples_file, corpus, batch_size, num_negatives, shuffle)
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
     def get_teacher_scores(self, qid, doc_id, neg=False):
         try:
             score = self.teacher[str(qid)][str(doc_id)]
