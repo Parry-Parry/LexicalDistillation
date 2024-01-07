@@ -1,5 +1,5 @@
 from transformers import PreTrainedModel, PretrainedConfig, AutoModel
-from lexdistill.lsr.models.sparse_encoder import SparseEncoder
+from lsr.models.sparse_encoder import SparseEncoder
 
 class DualSparseConfig(PretrainedConfig):
     model_type = "DualEncoder"
