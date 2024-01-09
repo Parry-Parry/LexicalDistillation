@@ -225,7 +225,7 @@ class dotStandardLoss(nn.Module):
     def __init__(self, num_negatives=1) -> None:
         super(dotStandardLoss, self).__init__()
         self.num_negatives = num_negatives
-        self.ce = nn.CrossEntropyLoss(re)
+        self.ce = nn.CrossEntropyLoss()
     def forward(self, q_reps, d_reps, labels=None):
         batch_size = q_reps.size(0)
         e_q = q_reps.view(batch_size, 1, -1)
