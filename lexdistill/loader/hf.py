@@ -86,7 +86,6 @@ class MultiMarginDataset(TripletIDDistilDataset):
             score = 0. if neg else 1.
         return [score]
 
-
 class DotDataCollator:
     "Tokenize and batch of (query, pos, neg, pos_score, neg_score)"
 
@@ -157,7 +156,7 @@ class CatDataCollator:
             batch_queries,
             batch_docs,
             padding=True,
-            truncation=True,
+            truncation='only_second',
             max_length=self.q_max_length + self.d_max_length,
             return_tensors="pt",
         )

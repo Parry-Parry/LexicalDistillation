@@ -102,17 +102,15 @@ class SPLADEMarginMSELoss(SparseLoss):
             a tuple of averaged loss, query regularization, doc regularization and log (for experiment tracking)
         """
         batch_size = q_reps.size(0)
-        e_q = q_reps.view(batch_size, -1)
+        e_q = q_reps.view(batch_size, 1, -1)
         e_d = d_reps.view(batch_size, self.num_negatives+1, -1)
+        scores = (e_q * e_d).sum(dim=-1)
+        # min max normalise scores over dim 1
+        #min_values = scores.min(dim=-1, keepdim=True)[0]
+        #max_values = scores.max(dim=-1, keepdim=True)[0]
+        #scores = (scores - min_values) / (max_values - min_values)
 
         labels = labels.view(batch_size, self.num_negatives+1)
-
-        scores = torch.einsum('ik,ikl->il', e_q, e_d.permute(0, 2, 1))
-
-        # min max normalise scores over dim 1
-        min_values = scores.min(dim=-1, keepdim=True)[0]
-        max_values = scores.max(dim=-1, keepdim=True)[0]
-        scores = (scores - min_values) / (max_values - min_values)
 
         pos_score = scores[:, 0]
         neg_score = scores[:, 1:]
@@ -161,13 +159,13 @@ class dotMarginMSELoss(nn.Module):
     
     def forward(self, q_reps, d_reps, labels=None):
         batch_size = q_reps.size(0)
-        e_q = q_reps.view(batch_size, -1)
+        e_q = q_reps.view(batch_size, 1, -1)
         e_d = d_reps.view(batch_size, self.num_negatives+1, -1)
-        scores = torch.einsum('ik,ikl->il', e_q, e_d.permute(0, 2, 1))
+        scores = (e_q * e_d).sum(dim=-1)
         # min max normalise scores over dim 1
-        min_values = scores.min(dim=-1, keepdim=True)[0]
-        max_values = scores.max(dim=-1, keepdim=True)[0]
-        scores = (scores - min_values) / (max_values - min_values)
+        #min_values = scores.min(dim=-1, keepdim=True)[0]
+        #max_values = scores.max(dim=-1, keepdim=True)[0]
+        #scores = (scores - min_values) / (max_values - min_values)
         
         if labels is None:
             return (scores, None, {})
@@ -222,3 +220,23 @@ class catMarginMSELoss(nn.Module):
             mse_loss,
             to_log,
         )
+
+class dotStandardLoss(nn.Module):
+    def __init__(self, num_negatives=1) -> None:
+        super(dotStandardLoss, self).__init__()
+        self.num_negatives = num_negatives
+    def forward(self, q_reps, d_reps, labels=None):
+        batch_size = q_reps.size(0)
+        e_q = q_reps.view(batch_size, 1, -1)
+        e_d = d_reps.view(batch_size, self.num_negatives+1, -1)
+        scores = (e_q * e_d).sum(dim=-1)
+
+        pos = scores[:, 0]
+        neg = scores[:, 1:]
+        
+        exp_pos = torch.exp(pos)
+        exp_neg = torch.exp(neg) 
+        frac = exp_pos / exp_neg.sum()
+
+        return -torch.log(frac).mean()
+
