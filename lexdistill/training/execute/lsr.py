@@ -34,7 +34,9 @@ def main(
         mode : str = 'std',
         early_patience : str = 30,
         early_check : str = 4000,
-        rank : int = None):
+        rank : int = None,
+        q_reg_weight : float = 0.1,
+        d_reg_weight : float = 0.08,):
 
     os.makedirs(out_dir, exist_ok=True)
     if os.path.exists(os.path.join(out_dir, 'model')):
@@ -62,8 +64,8 @@ def main(
         )
     if rank: torch.cuda.set_device(rank)
     logging.info('loading model...')
-    q_reg = FLOPs(weight=0.1, T=50000)
-    d_reg = FLOPs(weight=0.08, T=50000)
+    q_reg = FLOPs(weight=q_reg_weight, T=50000)
+    d_reg = FLOPs(weight=d_reg_weight, T=50000)
     loss_fn = SPLADEMarginMSELoss(q_regularizer=q_reg, d_regularizer=d_reg, num_negatives=num_negatives)
 
     config = TransformerMLMConfig(tf_base_model_name_or_dir='google/electra-base-discriminator')
