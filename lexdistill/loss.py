@@ -225,19 +225,15 @@ class dotStandardLoss(nn.Module):
     def __init__(self, num_negatives=1) -> None:
         super(dotStandardLoss, self).__init__()
         self.num_negatives = num_negatives
+        self.ce = nn.CrossEntropyLoss(re)
     def forward(self, q_reps, d_reps, labels=None):
         batch_size = q_reps.size(0)
         e_q = q_reps.view(batch_size, 1, -1)
         e_d = d_reps.view(batch_size, self.num_negatives+1, -1)
         scores = (e_q * e_d).sum(dim=-1)
+        labels = torch.zeros(batch_size, dtype=torch.long, device=scores.device)
 
-        pos = scores[:, 0]
-        neg = scores[:, 1:]
-
-        exp_pos = torch.exp(pos)
-        exp_neg = torch.exp(neg) 
-        frac = torch.stack([-torch.log(exp_pos[i] / exp_neg[i].sum()) for i in range(batch_size)])
-        loss = -torch.log(frac).mean()
+        loss = self.ce(scores, labels)
 
         to_log = {
             "loss_no_reg": loss.detach(),
