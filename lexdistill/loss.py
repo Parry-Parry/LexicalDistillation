@@ -237,5 +237,14 @@ class dotStandardLoss(nn.Module):
         exp_pos = torch.exp(pos)
         exp_neg = torch.exp(neg) 
         frac = torch.stack([-torch.log(exp_pos[i] / exp_neg[i].sum()) for i in range(batch_size)])
-        return -torch.log(frac).mean()
+        loss = -torch.log(frac).mean()
+
+        to_log = {
+            "loss_no_reg": loss.detach(),
+        }
+        return (
+            scores,
+            loss,
+            to_log,
+        )
 
